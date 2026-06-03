@@ -7,8 +7,8 @@
   "placeholder": true,
   "models": [
     {
-      "id": "claude-sonnet-4-5",
-      "displayName": "Claude Sonnet 4.5",
+      "id": "claude-sonnet-4-6",
+      "displayName": "Claude Sonnet 4.6",
       "provider": "anthropic",
       "vote": "spaces",
       "voteDistribution": {
@@ -25,8 +25,8 @@
       "runs": []
     },
     {
-      "id": "gpt-5",
-      "displayName": "GPT-5",
+      "id": "gpt-5.4",
+      "displayName": "GPT-5.4",
       "provider": "openai",
       "vote": "spaces",
       "voteDistribution": {
@@ -43,8 +43,8 @@
       "runs": []
     },
     {
-      "id": "gpt-5-mini",
-      "displayName": "GPT-5 mini",
+      "id": "gpt-5.4-mini",
+      "displayName": "GPT-5.4 mini",
       "provider": "openai",
       "vote": "spaces",
       "voteDistribution": {

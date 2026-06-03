@@ -1,36 +1,42 @@
-// Provider registry. V1 ships 4 enabled models; 4 more are stubbed for keys.
+// Provider registry. V1 ships 4 enabled models; stubs for V1.1 expansion.
+//
+// Pricing + model IDs verified 2026-06-03 against:
+//  - anthropic.com/pricing
+//  - openai.com/api/pricing
+//  - ai.google.dev/pricing
+//  - SDK .d.ts files for current valid model ID strings
 
 import type { ModelConfig } from '../types.ts';
-import { anthropicClient, claudeSonnet45Pricing, claudeOpus45Pricing } from './anthropic.ts';
-import { openaiClient, gpt5Pricing, gpt5MiniPricing } from './openai.ts';
-import { googleClient, gemini25ProPricing } from './google.ts';
+import { anthropicClient, claudeSonnet46Pricing, claudeOpus48Pricing } from './anthropic.ts';
+import { openaiClient, gpt54Pricing, gpt54MiniPricing } from './openai.ts';
+import { googleClient, gemini25ProPricing, gemini3ProPricing } from './google.ts';
 import type { LanguageModel } from 'ai';
 
 export const MODELS: ModelConfig[] = [
   {
-    id: 'claude-sonnet-4-5',
-    displayName: 'Claude Sonnet 4.5',
+    id: 'claude-sonnet-4-6',
+    displayName: 'Claude Sonnet 4.6',
     provider: 'anthropic',
-    modelId: 'claude-sonnet-4-5',
-    pricing: claudeSonnet45Pricing,
+    modelId: 'claude-sonnet-4-6',
+    pricing: claudeSonnet46Pricing,
     enabled: true,
   },
   {
-    id: 'gpt-5',
-    displayName: 'GPT-5',
+    id: 'gpt-5.4',
+    displayName: 'GPT-5.4',
     provider: 'openai',
-    modelId: 'gpt-5',
-    fallbackModelId: 'gpt-4o',
-    pricing: gpt5Pricing,
+    modelId: 'gpt-5.4',
+    fallbackModelId: 'gpt-5',
+    pricing: gpt54Pricing,
     enabled: true,
   },
   {
-    id: 'gpt-5-mini',
-    displayName: 'GPT-5 mini',
+    id: 'gpt-5.4-mini',
+    displayName: 'GPT-5.4 mini',
     provider: 'openai',
-    modelId: 'gpt-5-mini',
-    fallbackModelId: 'gpt-4o-mini',
-    pricing: gpt5MiniPricing,
+    modelId: 'gpt-5.4-mini',
+    fallbackModelId: 'gpt-5-mini',
+    pricing: gpt54MiniPricing,
     enabled: true,
   },
   {
@@ -38,17 +44,24 @@ export const MODELS: ModelConfig[] = [
     displayName: 'Gemini 2.5 Pro',
     provider: 'google',
     modelId: 'gemini-2.5-pro',
-    fallbackModelId: 'gemini-1.5-pro',
     pricing: gemini25ProPricing,
     enabled: true,
   },
-  // ---- stubs: enable once keys + pricing are confirmed ----
+  // ---- V1.1 stubs ----
   {
-    id: 'claude-opus-4-5',
-    displayName: 'Claude Opus 4.5',
+    id: 'gemini-3-pro-preview',
+    displayName: 'Gemini 3 Pro (preview)',
+    provider: 'google',
+    modelId: 'gemini-3-pro-preview',
+    pricing: gemini3ProPricing,
+    enabled: false,
+  },
+  {
+    id: 'claude-opus-4-8',
+    displayName: 'Claude Opus 4.8',
     provider: 'anthropic',
-    modelId: 'claude-opus-4-5',
-    pricing: claudeOpus45Pricing,
+    modelId: 'claude-opus-4-8',
+    pricing: claudeOpus48Pricing,
     enabled: false,
   },
   {
@@ -86,14 +99,15 @@ export function enabledModels(): ModelConfig[] {
  * Lazy — only constructs the provider client on first use, so dry runs work
  * even when API keys are absent.
  */
-export function resolveModel(config: ModelConfig): LanguageModel {
+export function resolveModel(config: ModelConfig, useFallback = false): LanguageModel {
+  const modelId = useFallback && config.fallbackModelId ? config.fallbackModelId : config.modelId;
   switch (config.provider) {
     case 'anthropic':
-      return anthropicClient()(config.modelId);
+      return anthropicClient()(modelId);
     case 'openai':
-      return openaiClient()(config.modelId);
+      return openaiClient()(modelId);
     case 'google':
-      return googleClient()(config.modelId);
+      return googleClient()(modelId);
     case 'openrouter':
       throw new Error('OpenRouter provider not yet wired (V1 stub).');
     default: {
