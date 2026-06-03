@@ -17,6 +17,12 @@ export interface RunOptions {
   temperatures: number[]; // e.g. [0, 0.7]
   concurrency: number;
   dryRun: boolean;
+  /** Per-call timeout in ms. Default 90s — providers occasionally hang on cold paths. */
+  callTimeoutMs?: number;
+  /** Retry attempts on transient failure / timeout. Default 2 (so 3 tries total). */
+  maxRetries?: number;
+  /** Progress callback fired after each cell completes (success or terminal failure). */
+  onProgress?: (done: number, total: number, record: RunRecord) => void;
 }
 
 export interface RunPlan {
@@ -29,6 +35,9 @@ export interface RunPlan {
 // Token estimates for cost projection — deliberately conservative.
 const EST_INPUT_TOKENS = 80;
 const EST_OUTPUT_TOKENS = 350;
+
+const DEFAULT_TIMEOUT_MS = 90_000;
+const DEFAULT_MAX_RETRIES = 2;
 
 export function buildPlan(opts: RunOptions): RunPlan {
   const models = opts.models ?? enabledModels();
@@ -75,14 +84,21 @@ export function explodeCells(opts: RunOptions): CellSpec[] {
   return cells;
 }
 
-export async function executeCell(opts: { fight: Fight; cell: CellSpec }): Promise<RunRecord> {
-  const { fight, cell } = opts;
+async function attemptCall(
+  fight: Fight,
+  cell: CellSpec,
+  timeoutMs: number,
+  useFallback: boolean,
+): Promise<RunRecord> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(new Error(`Timed out after ${timeoutMs}ms`)), timeoutMs);
   const t0 = Date.now();
   try {
     const result = await generateText({
-      model: resolveModel(cell.model),
+      model: resolveModel(cell.model, useFallback),
       prompt: cell.variantPrompt,
       temperature: cell.temperature,
+      abortSignal: controller.signal,
     });
     const inputTokens = result.usage?.inputTokens ?? 0;
     const outputTokens = result.usage?.outputTokens ?? 0;
@@ -100,27 +116,79 @@ export async function executeCell(opts: { fight: Fight; cell: CellSpec }): Promi
       latencyMs: Date.now() - t0,
       costUsd: computeCostUsd(cell.model.pricing, inputTokens, outputTokens),
     };
-  } catch (err) {
-    return {
-      modelId: cell.model.id,
-      variantIndex: cell.variantIndex,
-      temperature: cell.temperature,
-      runIndex: cell.runIndex,
-      prompt: cell.variantPrompt,
-      output: '',
-      classification: 'unknown',
-      inputTokens: 0,
-      outputTokens: 0,
-      latencyMs: Date.now() - t0,
-      costUsd: 0,
-      error: err instanceof Error ? err.message : String(err),
-    };
+  } finally {
+    clearTimeout(timer);
   }
+}
+
+export async function executeCell(opts: {
+  fight: Fight;
+  cell: CellSpec;
+  timeoutMs?: number;
+  maxRetries?: number;
+}): Promise<RunRecord> {
+  const { fight, cell } = opts;
+  const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const maxRetries = opts.maxRetries ?? DEFAULT_MAX_RETRIES;
+  let lastError: unknown = null;
+
+  // Try primary model up to (maxRetries + 1) times; if all fail and a fallback exists, try fallback once.
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await attemptCall(fight, cell, timeoutMs, false);
+    } catch (err) {
+      lastError = err;
+      // Backoff before retry (skip on last attempt)
+      if (attempt < maxRetries) {
+        await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+      }
+    }
+  }
+
+  // Fallback model id, single shot
+  if (cell.model.fallbackModelId) {
+    try {
+      return await attemptCall(fight, cell, timeoutMs, true);
+    } catch (err) {
+      lastError = err;
+    }
+  }
+
+  return {
+    modelId: cell.model.id,
+    variantIndex: cell.variantIndex,
+    temperature: cell.temperature,
+    runIndex: cell.runIndex,
+    prompt: cell.variantPrompt,
+    output: '',
+    classification: 'unknown',
+    inputTokens: 0,
+    outputTokens: 0,
+    latencyMs: 0,
+    costUsd: 0,
+    error: lastError instanceof Error ? lastError.message : String(lastError),
+  };
 }
 
 export async function runFight(opts: RunOptions): Promise<RunRecord[]> {
   if (opts.dryRun) return [];
   const cells = explodeCells(opts);
   const limit = pLimit(opts.concurrency);
-  return Promise.all(cells.map((cell) => limit(() => executeCell({ fight: opts.fight, cell }))));
+  const total = cells.length;
+  let done = 0;
+  return Promise.all(
+    cells.map((cell) =>
+      limit(async () => {
+        const record = await executeCell({
+          fight: opts.fight,
+          cell,
+          timeoutMs: opts.callTimeoutMs,
+          maxRetries: opts.maxRetries,
+        });
+        done++;
+        opts.onProgress?.(done, total, record);
+        return record;
+      }),
+    ),
+  );
 }
