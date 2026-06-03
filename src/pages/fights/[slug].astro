@@ -1,0 +1,67 @@
+---
+import Base from '../../layouts/Base.astro';
+import Verdict from '../../components/Verdict.astro';
+import VoteTally from '../../components/VoteTally.astro';
+import PunditPanel from '../../components/PunditPanel.astro';
+import Receipts from '../../components/Receipts.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const fights = await getCollection('fights');
+  const results = await getCollection('results');
+  const resultBySlug = new Map(results.map((r) => [r.data.slug, r.data]));
+  return fights.map((f) => ({
+    params: { slug: f.data.slug },
+    props: { fight: f.data, result: resultBySlug.get(f.data.slug) ?? null },
+  }));
+}
+
+const { fight, result } = Astro.props;
+---
+<Base title={`${fight.title} — Petty Evals`} description={fight.question}>
+  {result?.placeholder && (
+    <div class="mb-6 border px-4 py-2 text-xs" style="border-color: var(--pe-rule); color: var(--pe-muted);">
+      <strong style="color: var(--pe-fg);">Placeholder data.</strong>
+      The pipeline has not been executed yet against live APIs. Numbers shown are
+      illustrative and will be overwritten by the next pipeline run.
+    </div>
+  )}
+
+  {result ? (
+    <>
+      <Verdict
+        question={fight.question}
+        winner={result.verdict.winner}
+        tally={result.verdict.tally}
+        disagreementIndex={result.verdict.disagreementIndex}
+      />
+      <VoteTally models={result.models} />
+      <PunditPanel models={result.models} />
+      <Receipts models={result.models} />
+
+      <section class="mb-12">
+        <h2 class="text-xs uppercase tracking-widest mb-3" style="color: var(--pe-muted);">Provenance</h2>
+        <dl class="text-sm grid grid-cols-[max-content_1fr] gap-x-6 gap-y-1">
+          <dt style="color: var(--pe-muted);">Run started</dt><dd class="tabular-nums">{result.runStartedAt}</dd>
+          <dt style="color: var(--pe-muted);">Run finished</dt><dd class="tabular-nums">{result.runFinishedAt}</dd>
+          <dt style="color: var(--pe-muted);">Total runs</dt><dd class="tabular-nums">{result.totalRuns}</dd>
+          <dt style="color: var(--pe-muted);">Total cost</dt><dd class="tabular-nums">${result.totalCostUsd.toFixed(4)} USD</dd>
+          <dt style="color: var(--pe-muted);">Classifier &kappa;</dt><dd class="tabular-nums">{result.classifierKappa ?? 'not yet measured'}</dd>
+          <dt style="color: var(--pe-muted);">Submitted by</dt><dd>{fight.submittedBy}</dd>
+          <dt style="color: var(--pe-muted);">Date added</dt><dd class="tabular-nums">{fight.dateAdded}</dd>
+        </dl>
+      </section>
+
+      <section class="mb-12">
+        <h2 class="text-xs uppercase tracking-widest mb-3" style="color: var(--pe-muted);">Prompts used</h2>
+        <ol class="space-y-2 text-sm">
+          {fight.promptVariants.map((p) => (
+            <li class="border px-3 py-2" style="border-color: var(--pe-rule);">{p}</li>
+          ))}
+        </ol>
+      </section>
+    </>
+  ) : (
+    <p>No results recorded for this fight yet.</p>
+  )}
+</Base>

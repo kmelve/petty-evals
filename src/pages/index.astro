@@ -1,0 +1,81 @@
+---
+import Base from '../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const fights = await getCollection('fights');
+const results = await getCollection('results');
+
+const resultBySlug = new Map(results.map((r) => [r.data.slug, r.data]));
+
+const rows = fights.map((f) => {
+  const r = resultBySlug.get(f.data.slug);
+  return {
+    slug: f.data.slug,
+    title: f.data.title,
+    question: f.data.question,
+    category: f.data.category,
+    winner: r?.verdict.winner ?? null,
+    tally: r?.verdict.tally ?? {},
+    disagreementIndex: r?.verdict.disagreementIndex ?? null,
+    placeholder: r?.placeholder ?? false,
+  };
+});
+
+// Sort by Disagreement Index descending (the front-page hook),
+// with no-result fights at the bottom.
+rows.sort((a, b) => {
+  if (a.disagreementIndex == null && b.disagreementIndex == null) return 0;
+  if (a.disagreementIndex == null) return 1;
+  if (b.disagreementIndex == null) return -1;
+  return b.disagreementIndex - a.disagreementIndex;
+});
+---
+<Base title="Petty Evals — Leaderboard">
+  <section class="mb-10">
+    <p class="text-sm uppercase tracking-widest" style="color: var(--pe-muted);">Petty Evals v0.1</p>
+    <h1 class="mt-2 text-3xl md:text-5xl font-semibold leading-tight">
+      Rigorous benchmarks for problems that don't matter.
+    </h1>
+    <p class="mt-4 max-w-prose text-sm" style="color: var(--pe-muted);">
+      We run identical realistic coding prompts across frontier models, measure what they actually
+      do, and publish the verdicts. Sorted by disagreement, because consensus is boring.
+    </p>
+  </section>
+
+  <section>
+    <div class="border" style="border-color: var(--pe-rule);">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b" style="border-color: var(--pe-rule);">
+            <th class="text-left px-4 py-2 font-medium">Fight</th>
+            <th class="text-left px-4 py-2 font-medium">Category</th>
+            <th class="text-left px-4 py-2 font-medium">Winner</th>
+            <th class="text-left px-4 py-2 font-medium">Disagreement</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr class="border-b last:border-b-0" style="border-color: var(--pe-rule);">
+              <td class="px-4 py-2">
+                <a href={`/fights/${row.slug}`} class="font-medium hover:underline">
+                  {row.title}
+                </a>
+                {row.placeholder && (
+                  <span class="ml-2 text-xs px-1.5 py-0.5 border tabular-nums" style="border-color: var(--pe-rule); color: var(--pe-muted);">
+                    placeholder
+                  </span>
+                )}
+                <div class="text-xs" style="color: var(--pe-muted);">{row.question}</div>
+              </td>
+              <td class="px-4 py-2 text-xs" style="color: var(--pe-muted);">{row.category}</td>
+              <td class="px-4 py-2 tabular-nums font-semibold">{row.winner ?? '—'}</td>
+              <td class="px-4 py-2 tabular-nums" style="color: var(--pe-muted);">
+                {row.disagreementIndex != null ? row.disagreementIndex.toFixed(3) : '—'}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</Base>

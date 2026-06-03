@@ -1,0 +1,43 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+const { title, description = 'Rigorous benchmarks for problems that don\'t matter.' } = Astro.props;
+---
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+  </head>
+  <body class="min-h-screen">
+    <header class="border-b" style="border-color: var(--pe-rule);">
+      <div class="mx-auto max-w-4xl px-6 py-4 flex items-baseline justify-between">
+        <a href="/" class="text-base font-semibold tracking-tight">Petty Evals</a>
+        <nav class="flex gap-6 text-sm" style="color: var(--pe-muted);">
+          <a href="/" class="hover:underline">Leaderboard</a>
+          <a href="/methodology" class="hover:underline">Methodology</a>
+        </nav>
+      </div>
+    </header>
+    <main class="mx-auto max-w-4xl px-6 py-10">
+      <slot />
+    </main>
+    <slot name="footer">
+      <footer class="border-t mt-16" style="border-color: var(--pe-rule);">
+        <div class="mx-auto max-w-4xl px-6 py-6 text-xs flex justify-between" style="color: var(--pe-muted);">
+          <span>Petty Evals &middot; Rigorous benchmarks for problems that don't matter.</span>
+          <span>Source: github.com/kmelve/petty-evals</span>
+        </div>
+      </footer>
+    </slot>
+  </body>
+</html>

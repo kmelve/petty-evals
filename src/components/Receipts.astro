@@ -1,0 +1,55 @@
+---
+interface Run {
+  variantIndex: number;
+  temperature: number;
+  runIndex: number;
+  prompt: string;
+  output: string;
+  classification: string;
+  inputTokens: number;
+  outputTokens: number;
+  latencyMs: number;
+  costUsd: number;
+}
+interface ModelRow {
+  id: string;
+  displayName: string;
+  runs: Run[];
+}
+interface Props {
+  models: ModelRow[];
+}
+const { models } = Astro.props;
+const hasAnyRuns = models.some((m) => m.runs.length > 0);
+---
+<section class="mb-12">
+  <h2 class="text-xs uppercase tracking-widest mb-3" style="color: var(--pe-muted);">Receipts</h2>
+  {!hasAnyRuns && (
+    <p class="text-sm" style="color: var(--pe-muted);">
+      Per-run records appear here once the pipeline has been executed. The current results JSON
+      contains aggregated placeholder data only.
+    </p>
+  )}
+  {hasAnyRuns && models.map((m) => (
+    <details class="border mb-2" style="border-color: var(--pe-rule);">
+      <summary class="cursor-pointer px-4 py-2 text-sm font-medium">
+        {m.displayName} — {m.runs.length} runs
+      </summary>
+      <div class="px-4 py-2 text-xs">
+        {m.runs.slice(0, 3).map((r) => (
+          <div class="mb-3">
+            <p style="color: var(--pe-muted);">
+              variant {r.variantIndex} · temp {r.temperature} · run {r.runIndex} ·
+              {' '}class <strong>{r.classification}</strong> · {r.inputTokens}+{r.outputTokens} tok ·
+              {' '}{r.latencyMs}ms · ${r.costUsd.toFixed(4)}
+            </p>
+            <pre class="bg-white border p-2 overflow-x-auto" style="border-color: var(--pe-rule);"><code>{r.output.slice(0, 500)}</code></pre>
+          </div>
+        ))}
+        {m.runs.length > 3 && (
+          <p style="color: var(--pe-muted);">{m.runs.length - 3} additional runs in the source JSON.</p>
+        )}
+      </div>
+    </details>
+  ))}
+</section>

@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+/* Site uses monospace for everything except long-form prose. */
+:root {
+  color-scheme: light;
+  --pe-fg: #111;
+  --pe-bg: #fafaf7;
+  --pe-muted: #6b6b6b;
+  --pe-rule: #d5d5d0;
+}
+
+html, body {
+  background: var(--pe-bg);
+  color: var(--pe-fg);
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  font-feature-settings: "ss01", "cv11";
+}
+
+.prose {
+  font-family: ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", sans-serif;
+  max-width: 65ch;
+  line-height: 1.55;
+}

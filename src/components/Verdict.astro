@@ -1,0 +1,31 @@
+---
+interface Props {
+  question: string;
+  winner: string;
+  tally: Record<string, number>;
+  disagreementIndex: number;
+}
+const { question, winner, tally, disagreementIndex } = Astro.props;
+const tallyParts = Object.entries(tally)
+  .sort((a, b) => b[1] - a[1])
+  .map(([k, v]) => `${k} ${v}`)
+  .join(' — ');
+---
+<section class="mb-12">
+  <p class="text-sm uppercase tracking-widest" style="color: var(--pe-muted);">Verdict</p>
+  <h1 class="mt-3 text-3xl md:text-5xl font-semibold leading-tight">{question}</h1>
+  <div class="mt-8 flex flex-wrap items-baseline gap-x-8 gap-y-2">
+    <div>
+      <p class="text-xs uppercase tracking-widest" style="color: var(--pe-muted);">Winner</p>
+      <p class="text-4xl md:text-6xl font-semibold tabular-nums">{winner}</p>
+    </div>
+    <div>
+      <p class="text-xs uppercase tracking-widest" style="color: var(--pe-muted);">Tally</p>
+      <p class="text-xl tabular-nums">{tallyParts}</p>
+    </div>
+    <div>
+      <p class="text-xs uppercase tracking-widest" style="color: var(--pe-muted);">Disagreement Index</p>
+      <p class="text-xl tabular-nums">{disagreementIndex.toFixed(3)}</p>
+    </div>
+  </div>
+</section>

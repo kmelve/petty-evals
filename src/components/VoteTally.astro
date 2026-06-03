@@ -1,0 +1,49 @@
+---
+interface ModelRow {
+  id: string;
+  displayName: string;
+  provider: string;
+  vote: string;
+  voteDistribution: Record<string, number>;
+  confidence: number;
+  confidenceCI95: [number, number];
+}
+interface Props {
+  models: ModelRow[];
+}
+const { models } = Astro.props;
+---
+<section class="mb-12">
+  <h2 class="text-xs uppercase tracking-widest mb-3" style="color: var(--pe-muted);">Vote breakdown</h2>
+  <div class="border" style="border-color: var(--pe-rule);">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b" style="border-color: var(--pe-rule);">
+          <th class="text-left px-4 py-2 font-medium">Model</th>
+          <th class="text-left px-4 py-2 font-medium">Vote</th>
+          <th class="text-left px-4 py-2 font-medium">Confidence</th>
+          <th class="text-left px-4 py-2 font-medium">95% CI</th>
+          <th class="text-left px-4 py-2 font-medium">Distribution</th>
+        </tr>
+      </thead>
+      <tbody>
+        {models.map((m) => (
+          <tr class="border-b last:border-b-0" style="border-color: var(--pe-rule);">
+            <td class="px-4 py-2">
+              <div class="font-medium">{m.displayName}</div>
+              <div class="text-xs" style="color: var(--pe-muted);">{m.provider}</div>
+            </td>
+            <td class="px-4 py-2 tabular-nums font-semibold">{m.vote}</td>
+            <td class="px-4 py-2 tabular-nums">{(m.confidence * 100).toFixed(0)}%</td>
+            <td class="px-4 py-2 tabular-nums" style="color: var(--pe-muted);">
+              {(m.confidenceCI95[0] * 100).toFixed(0)}–{(m.confidenceCI95[1] * 100).toFixed(0)}%
+            </td>
+            <td class="px-4 py-2 text-xs tabular-nums" style="color: var(--pe-muted);">
+              {Object.entries(m.voteDistribution).map(([k, v]) => `${k}=${v}`).join(' ')}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</section>

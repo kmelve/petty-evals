@@ -1,0 +1,8 @@
+verifyDepsBeforeRun: false
+minimumReleaseAgeExclude:
+  - '@ai-sdk/gateway@3.0.124'
+  - ai@6.0.196
+  - astro@6.4.4
+allowBuilds:
+  esbuild: true
+  sharp: true

@@ -1,0 +1,91 @@
+{
+  "slug": "tabs-vs-spaces-python",
+  "runStartedAt": "2026-06-03T00:00:00.000Z",
+  "runFinishedAt": "2026-06-03T00:00:00.000Z",
+  "totalCostUsd": 0,
+  "totalRuns": 0,
+  "placeholder": true,
+  "models": [
+    {
+      "id": "claude-sonnet-4-5",
+      "displayName": "Claude Sonnet 4.5",
+      "provider": "anthropic",
+      "vote": "spaces",
+      "voteDistribution": {
+        "spaces": 30,
+        "tabs": 0,
+        "unknown": 0
+      },
+      "confidence": 1,
+      "confidenceCI95": [
+        0.88,
+        1
+      ],
+      "punditQuote": "The verdict is consistent with established convention; the low variance across models suggests prompt sensitivity is not a confound here.",
+      "runs": []
+    },
+    {
+      "id": "gpt-5",
+      "displayName": "GPT-5",
+      "provider": "openai",
+      "vote": "spaces",
+      "voteDistribution": {
+        "spaces": 29,
+        "tabs": 0,
+        "unknown": 1
+      },
+      "confidence": 0.97,
+      "confidenceCI95": [
+        0.83,
+        0.99
+      ],
+      "punditQuote": "Unanimity across this panel reflects the dominance of PEP 8 in the training corpus rather than an aesthetic preference.",
+      "runs": []
+    },
+    {
+      "id": "gpt-5-mini",
+      "displayName": "GPT-5 mini",
+      "provider": "openai",
+      "vote": "spaces",
+      "voteDistribution": {
+        "spaces": 28,
+        "tabs": 0,
+        "unknown": 2
+      },
+      "confidence": 0.93,
+      "confidenceCI95": [
+        0.78,
+        0.98
+      ],
+      "punditQuote": "The result is unsurprising given the corpus; the modest unknown count is attributable to occasional inline-only responses.",
+      "runs": []
+    },
+    {
+      "id": "gemini-2.5-pro",
+      "displayName": "Gemini 2.5 Pro",
+      "provider": "google",
+      "vote": "spaces",
+      "voteDistribution": {
+        "spaces": 30,
+        "tabs": 0,
+        "unknown": 0
+      },
+      "confidence": 1,
+      "confidenceCI95": [
+        0.88,
+        1
+      ],
+      "punditQuote": "A clean sweep; the more interesting open question is whether this generalizes to Go, where convention diverges.",
+      "runs": []
+    }
+  ],
+  "verdict": {
+    "winner": "spaces",
+    "tally": {
+      "spaces": 4,
+      "tabs": 0
+    },
+    "disagreementIndex": 0
+  },
+  "classifierKappa": null
+}
