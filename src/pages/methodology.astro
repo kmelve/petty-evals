@@ -1,78 +1,92 @@
 ---
 import Base from '../layouts/Base.astro';
 ---
-<Base title="Methodology — Petty Evals">
-  <article class="prose">
-    <p style="color: var(--pe-muted);" class="text-sm uppercase tracking-widest">Methodology</p>
-    <h1 class="text-3xl font-semibold mt-2 mb-6">How Petty Evals measures what models actually do</h1>
+<Base title="How I did this — Petty Evals">
+  <div class="mb-12">
+    <span class="sticker sticker--blue">methodology</span>
+    <h1 class="display text-5xl md:text-7xl mt-3 mb-4">
+      How I did this<br>
+      <span style="color: var(--color-coral);">(the actual nerd shit)</span>
+    </h1>
+    <p class="text-lg max-w-2xl" style="color: var(--color-muted);">
+      I tried to make a real eval, but for stupid questions. The methodology is genuine —
+      Wilson confidence intervals, Cohen's kappa, the works. The questions are not.
+    </p>
+  </div>
 
+  <div class="prose">
+    <h2 class="display text-3xl">The setup</h2>
+    <p>For every fight I run the same recipe.</p>
     <p>
-      Petty Evals is a benchmark suite for stylistic and formatting choices in code
-      generation. Every fight evaluates a single decision — tabs vs spaces, single
-      vs double quotes, <code>===</code> vs <code>==</code> — and reports a verdict
-      across a fixed panel of frontier language models. This page describes the
-      protocol used for every fight.
+      <strong>4 models</strong>: Claude Sonnet 4.6, GPT-5.4, GPT-5.4 mini, Gemini 2.5 Pro.
+      <strong>3 prompt variants per fight</strong> — different coding tasks that should provoke
+      the same formatting choice (e.g., "write a function that reverses a linked list"
+      and "write a class that implements a stack" both reveal indentation preference).
+      <strong>2 temperatures</strong>: 0.0 (deterministic) and 0.7 (default).
+      <strong>10 runs per cell.</strong> That's <strong>240 generations per fight</strong>.
+    </p>
+    <p>
+      No system prompt, no priming. The model gets the question cold, like it would from a user.
+      Then I measure what it actually wrote. Revealed preference, not stated preference —
+      stated preference is sycophantic and boring.
     </p>
 
-    <h2 class="text-xl font-semibold mt-8 mb-3">Run protocol</h2>
+    <h2 class="display text-3xl">The classifier</h2>
     <p>
-      For each fight we issue, per model and per temperature setting,
-      <strong>N = 10 runs</strong> against each of <strong>3 prompt variants</strong>.
-      We sweep two temperatures: <code>0.0</code> for deterministic decoding and
-      <code>0.7</code> as a representative default. The system prompt is empty;
-      we test the bare model with no priming.
+      Each output gets parsed: does the first indented line start with a tab, or with two-or-more
+      spaces? That's the regex layer. When the regex says "I don't know" (e.g., the model produced
+      wrapped prose without code), an LLM judge (Claude Haiku 4.5) breaks the tie.
     </p>
     <p>
-      The result for one (fight × model) cell is therefore 60 generations. The
-      headline vote is the modal classification across those 60 outputs.
-    </p>
-
-    <h2 class="text-xl font-semibold mt-8 mb-3">Classification</h2>
-    <p>
-      The primary classifier for each fight is deterministic — a regular
-      expression or small AST inspection that maps an output to a label like
-      <code>tabs</code>, <code>spaces</code>, or <code>unknown</code>. When the
-      primary classifier returns <code>unknown</code>, an LLM judge (Claude Haiku,
-      temperature 0) is consulted as a tie-breaker. Inter-rater reliability
-      against a 30-output hand-labeled subsample is reported as
-      Cohen's <em>kappa</em>; fights with kappa below 0.7 are flagged and do not
-      receive a verdict.
+      For every fight I hand-label a 30-sample subsample and compare to the classifier.
+      <strong>Cohen's kappa &gt; 0.7 required</strong> for a fight to ship with a verdict;
+      anything lower gets flagged as "classifier unreliable" and stays parked.
     </p>
 
-    <h2 class="text-xl font-semibold mt-8 mb-3">Statistics</h2>
-    <ul class="list-disc pl-6 space-y-1">
-      <li>
-        <strong>Confidence interval:</strong> Wilson score 95% CI on the modal
-        proportion. Chosen over Wald because the Wald interval misbehaves at
-        small <em>n</em> and at proportions near 0 or 1.
-      </li>
-      <li>
-        <strong>Verdict:</strong> majority vote across models. Each model gets
-        one vote. Ties are reported as ties; we do not apply a tiebreaker.
-      </li>
-      <li>
-        <strong>Disagreement Index:</strong> normalized Shannon entropy of the
-        per-model vote distribution. 0 = unanimous, 1 = maximum chaos. The
-        homepage leaderboard sorts by this value.
-      </li>
-    </ul>
-
-    <h2 class="text-xl font-semibold mt-8 mb-3">Reproducibility</h2>
+    <h2 class="display text-3xl">The stats</h2>
     <p>
-      Every prompt and classifier lives in the source repository, committed
-      before the run. Every result file is committed alongside the prompts that
-      produced it. Anyone with API keys for the four configured providers can
-      reproduce a fight with one command:
+      <strong>Vote per model</strong> = the modal classification across its 60 runs.<br>
+      <strong>Confidence</strong> = % of runs that agreed with the modal vote.<br>
+      <strong>95% CI</strong> = Wilson score interval.<br>
+      <strong>Verdict</strong> = majority across models. Ties reported as ties — no tiebreaker.<br>
+      <strong>Disagreement Index</strong> = normalized Shannon entropy of the votes.
+      0 means unanimous; 1 means maximum chaos. The leaderboard sorts by this.
     </p>
-    <pre class="bg-white border p-3 overflow-x-auto" style="border-color: var(--pe-rule);"><code>pnpm evals --fight=tabs-vs-spaces-python</code></pre>
 
-    <h2 class="text-xl font-semibold mt-8 mb-3">Cost and provenance</h2>
+    <h2 class="display text-3xl">The pundit panel</h2>
+    <p>This part is the fun part.</p>
     <p>
-      Each fight page records the wall-clock start and finish of its run, the
-      total token count, and the total cost in USD computed from per-provider
-      published prices at run time. Model identifiers are pinned. When a model
-      version changes, the fight is re-run and the prior result remains in git
-      history.
+      After all votes are in, I send each model a follow-up:
+      <em>"Here's the result of the eval. One sentence on what you think."</em>
+      Each model gets the full vote tally + one representative code sample per peer.
     </p>
-  </article>
+    <p>
+      I never edit the quotes. I may truncate at a sentence boundary. What you get is each
+      model's character — Claude is polite, GPT is institutional, Gemini is enthusiastic,
+      GPT-5.4 mini just wants to get back to work.
+    </p>
+
+    <h2 class="display text-3xl">Caveats</h2>
+    <p>
+      <strong>GPT-5.4 and GPT-5.4 mini are reasoning models.</strong> Temperature is silently
+      ignored. Both calls are reported at the listed temperature for bookkeeping, but in practice
+      the model picks its own sampling. I report this and you can decide whether to care.
+    </p>
+    <p>
+      <strong>This is four models, not all models.</strong> Grok, DeepSeek, Qwen, and Opus are
+      next in the queue once I get OpenRouter set up. (Then v1.1 is going to be a moment.)
+    </p>
+    <p>
+      <strong>This is the AI, not "developers".</strong> The AI is trained on a lot of human code,
+      but it isn't a vote among humans. It's a vote among AIs about which humans they imitated.
+      Make of that what you will.
+    </p>
+
+    <h2 class="display text-3xl">All the code</h2>
+    <p>
+      The whole pipeline is on <a href="https://github.com/kmelve/petty-evals">GitHub</a>.
+      One command runs the whole thing: <code>pnpm evals --fight=&lt;slug&gt;</code>.
+      Bring your own API keys, run it yourself, audit the numbers. That's the whole point.
+    </p>
+  </div>
 </Base>

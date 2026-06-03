@@ -1,23 +1,128 @@
 @import "tailwindcss";
 
-/* Site uses monospace for everything except long-form prose. */
-:root {
-  color-scheme: light;
-  --pe-fg: #111;
-  --pe-bg: #fafaf7;
-  --pe-muted: #6b6b6b;
-  --pe-rule: #d5d5d0;
+/* Petty Evals — Wes-Bos-dialed-back. Cream base, coral primary, electric blue accent.
+   Chunky display type via Bricolage Grotesque. Body Inter. Mono only for code. */
+
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter:wght@400..800&family=JetBrains+Mono:wght@400..700&display=swap');
+
+@theme {
+  --color-cream: #FFF8E7;
+  --color-ink: #1A1A1A;
+  --color-coral: #FF5C5C;
+  --color-coral-deep: #E04545;
+  --color-blue: #3B5BFF;
+  --color-blue-deep: #2A45D6;
+  --color-rule: rgba(26, 26, 26, 0.12);
+  --color-muted: rgba(26, 26, 26, 0.6);
+  --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 }
+
+:root { color-scheme: light; }
 
 html, body {
-  background: var(--pe-bg);
-  color: var(--pe-fg);
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
-  font-feature-settings: "ss01", "cv11";
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-feature-settings: 'ss01', 'cv11';
+  -webkit-font-smoothing: antialiased;
 }
 
-.prose {
-  font-family: ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", sans-serif;
-  max-width: 65ch;
-  line-height: 1.55;
+.display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 0.95;
 }
+
+.sticker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  background: var(--color-coral);
+  color: var(--color-cream);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.875rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  border: 2px solid var(--color-ink);
+  box-shadow: 3px 3px 0 var(--color-ink);
+  transform: rotate(-2deg);
+  transition: transform 0.15s ease;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.sticker:hover { transform: rotate(-2deg) translateY(-1px); }
+.sticker--blue { background: var(--color-blue); }
+.sticker--ink { background: var(--color-ink); color: var(--color-cream); box-shadow: 3px 3px 0 var(--color-coral); }
+
+.chunky {
+  background: white;
+  border: 2px solid var(--color-ink);
+  box-shadow: 4px 4px 0 var(--color-ink);
+}
+.chunky--coral { box-shadow: 4px 4px 0 var(--color-coral); }
+.chunky--blue { box-shadow: 4px 4px 0 var(--color-blue); }
+
+a.styled, .prose a {
+  color: var(--color-blue);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+  font-weight: 600;
+}
+a.styled:hover, .prose a:hover {
+  background: var(--color-blue);
+  color: var(--color-cream);
+  text-decoration: none;
+}
+
+pre, code { font-family: var(--font-mono); }
+pre.code-block {
+  background: var(--color-ink);
+  color: var(--color-cream);
+  padding: 1rem 1.25rem;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  white-space: pre;
+}
+
+.prose { max-width: 65ch; line-height: 1.65; font-size: 1.0625rem; }
+.prose p { margin-bottom: 1em; }
+.prose strong { font-weight: 700; color: var(--color-ink); }
+.prose code:not(pre code) {
+  background: var(--color-ink);
+  color: var(--color-cream);
+  padding: 0.15em 0.4em;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+.prose h2 { margin-top: 2.5em; margin-bottom: 0.5em; }
+
+details.accordion { border-top: 2px solid var(--color-ink); }
+details.accordion:last-child { border-bottom: 2px solid var(--color-ink); }
+details.accordion > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 1.25rem 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+details.accordion > summary::-webkit-details-marker { display: none; }
+details.accordion > summary::after {
+  content: '+';
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 0.5;
+  transition: transform 0.15s ease;
+}
+details.accordion[open] > summary::after { content: '−'; }

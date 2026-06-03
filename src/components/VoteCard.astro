@@ -1,0 +1,28 @@
+---
+interface ModelResult {
+  id: string;
+  displayName: string;
+  vote: string;
+  confidence: number;
+  confidenceCI95: [number, number];
+  voteDistribution: Record<string, number>;
+}
+interface Props { model: ModelResult; }
+const { model } = Astro.props;
+const confidencePct = Math.round(model.confidence * 100);
+const ciLow = Math.round(model.confidenceCI95[0] * 100);
+const ciHigh = Math.round(model.confidenceCI95[1] * 100);
+---
+<div class="chunky p-5">
+  <div class="flex items-baseline justify-between mb-3 gap-2">
+    <div class="font-semibold text-base leading-tight">{model.displayName}</div>
+    <div class="text-xs font-mono" style="color: var(--color-muted);">{model.id}</div>
+  </div>
+  <div class="display text-4xl md:text-5xl mb-1" style="color: var(--color-coral);">
+    {model.vote.toUpperCase()}
+  </div>
+  <div class="text-sm" style="color: var(--color-muted);">
+    {confidencePct}% confidence
+    <span class="font-mono">(95% CI: {ciLow}–{ciHigh}%)</span>
+  </div>
+</div>

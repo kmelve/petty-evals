@@ -4,8 +4,13 @@ import '../styles/global.css';
 interface Props {
   title: string;
   description?: string;
+  ogImage?: string;
 }
-const { title, description = 'Rigorous benchmarks for problems that don\'t matter.' } = Astro.props;
+const {
+  title,
+  description = "I made four AI models fight about petty dev debates. They mostly agree, which is also a finding.",
+  ogImage,
+} = Astro.props;
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -17,27 +22,38 @@ const { title, description = 'Rigorous benchmarks for problems that don\'t matte
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    <meta name="twitter:card" content="summary_large_image" />
+    {ogImage && <meta name="twitter:image" content={ogImage} />}
   </head>
-  <body class="min-h-screen">
-    <header class="border-b" style="border-color: var(--pe-rule);">
-      <div class="mx-auto max-w-4xl px-6 py-4 flex items-baseline justify-between">
-        <a href="/" class="text-base font-semibold tracking-tight">Petty Evals</a>
-        <nav class="flex gap-6 text-sm" style="color: var(--pe-muted);">
-          <a href="/" class="hover:underline">Leaderboard</a>
-          <a href="/methodology" class="hover:underline">Methodology</a>
+  <body class="min-h-screen flex flex-col">
+    <header class="px-6 md:px-10 py-5">
+      <div class="mx-auto max-w-5xl flex items-center justify-between">
+        <a href="/" class="sticker">★ Petty Evals</a>
+        <nav class="flex gap-5 text-sm font-semibold">
+          <a href="/" class="styled">All fights</a>
+          <a href="/methodology" class="styled">The nerd shit</a>
         </nav>
       </div>
     </header>
-    <main class="mx-auto max-w-4xl px-6 py-10">
-      <slot />
+
+    <main class="flex-1 px-6 md:px-10 py-10">
+      <div class="mx-auto max-w-5xl">
+        <slot />
+      </div>
     </main>
-    <slot name="footer">
-      <footer class="border-t mt-16" style="border-color: var(--pe-rule);">
-        <div class="mx-auto max-w-4xl px-6 py-6 text-xs flex justify-between" style="color: var(--pe-muted);">
-          <span>Petty Evals &middot; Rigorous benchmarks for problems that don't matter.</span>
-          <span>Source: github.com/kmelve/petty-evals</span>
+
+    <footer class="px-6 md:px-10 py-10 border-t-2 mt-16" style="border-color: var(--color-ink);">
+      <div class="mx-auto max-w-5xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <div class="display text-2xl mb-1">I made this.</div>
+          <div class="text-sm" style="color: var(--color-muted);">
+            <a href="https://github.com/kmelve" class="styled">@kmelve</a>
+            · fight rigorously, fight petty
+          </div>
         </div>
-      </footer>
-    </slot>
+        <a href="https://github.com/kmelve/petty-evals" class="sticker sticker--blue">Source on GitHub</a>
+      </div>
+    </footer>
   </body>
 </html>

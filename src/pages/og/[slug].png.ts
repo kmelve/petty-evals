@@ -1,5 +1,5 @@
 // Dynamic OG share card for each fight.
-// astro-og-canvas v0.11 returns a Promise — we await it at module top level.
+// Uses the site palette: cream bg, coral accent, ink text. Chunky.
 
 import { OGImageRoute } from 'astro-og-canvas';
 import { getCollection } from 'astro:content';
@@ -10,7 +10,9 @@ const resultBySlug = new Map(results.map((r) => [r.data.slug, r.data]));
 
 interface PageMeta {
   title: string;
-  description: string;
+  verdict: string;
+  tally: string;
+  hasResult: boolean;
 }
 
 const pages: Record<string, PageMeta> = Object.fromEntries(
@@ -19,18 +21,26 @@ const pages: Record<string, PageMeta> = Object.fromEntries(
     const tally = r
       ? Object.entries(r.verdict.tally)
           .sort((a, b) => b[1] - a[1])
-          .map(([k, v]) => `${k} ${v}`)
-          .join(' — ')
-      : 'pending';
+          .map(([k, v]) => `${v} ${k}`)
+          .join(' · ')
+      : '';
     return [
       f.data.slug,
       {
-        title: f.data.title,
-        description: r ? `Verdict: ${r.verdict.winner} (${tally})` : 'Run pending',
+        title: f.data.title.replace(/[?.]$/, '') + '?',
+        verdict: r ? r.verdict.winner.toUpperCase() : 'PENDING',
+        tally,
+        hasResult: !!r,
       },
     ];
   })
 );
+
+// Color tokens (RGB tuples for astro-og-canvas).
+const CREAM: [number, number, number] = [255, 248, 231];
+const INK: [number, number, number] = [26, 26, 26];
+const CORAL: [number, number, number] = [255, 92, 92];
+const MUTED: [number, number, number] = [110, 110, 110];
 
 export const { getStaticPaths, GET } = await OGImageRoute<PageMeta>({
   param: 'slug',
@@ -38,14 +48,26 @@ export const { getStaticPaths, GET } = await OGImageRoute<PageMeta>({
   // Route filename already supplies the .png extension; return the bare key.
   getSlug: (path) => path,
   getImageOptions: (_path, page) => ({
-    title: page.title,
-    description: page.description,
-    bgGradient: [[250, 250, 247]],
-    border: { color: [17, 17, 17], width: 4 },
-    padding: 60,
+    // Use the verdict as the eye-catcher — that's what gets shared.
+    title: page.hasResult ? page.verdict : page.title,
+    description: page.hasResult ? `${page.tally}  ·  petty evals` : 'petty evals · run pending',
+    bgGradient: [CREAM],
+    border: { color: INK, width: 8 },
+    padding: 80,
     font: {
-      title: { size: 64, color: [17, 17, 17], weight: 'Bold' },
-      description: { size: 28, color: [107, 107, 107], weight: 'Normal' },
+      title: {
+        size: 180,
+        color: CORAL,
+        weight: 'Bold',
+        lineHeight: 1,
+      },
+      description: {
+        size: 36,
+        color: INK,
+        weight: 'Bold',
+        lineHeight: 1.2,
+      },
     },
+    logo: undefined,
   }),
 });

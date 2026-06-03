@@ -3,79 +3,86 @@ import Base from '../layouts/Base.astro';
 import { getCollection } from 'astro:content';
 
 const fights = await getCollection('fights');
-const results = await getCollection('results');
+const allResults = import.meta.glob('../data/results/*.json', { eager: true }) as Record<string, { default: any }>;
+const resultsBySlug: Record<string, any> = {};
+for (const [path, mod] of Object.entries(allResults)) {
+  const slug = path.split('/').pop()!.replace('.json', '');
+  resultsBySlug[slug] = mod.default;
+}
 
-const resultBySlug = new Map(results.map((r) => [r.data.slug, r.data]));
+function tallyString(tally: Record<string, number>): string {
+  return Object.entries(tally).map(([k, v]) => `${v} ${k}`).join(' · ');
+}
 
-const rows = fights.map((f) => {
-  const r = resultBySlug.get(f.data.slug);
+const items = fights.map((f) => {
+  const r = resultsBySlug[f.id];
   return {
-    slug: f.data.slug,
+    slug: f.id,
     title: f.data.title,
     question: f.data.question,
-    category: f.data.category,
-    winner: r?.verdict.winner ?? null,
-    tally: r?.verdict.tally ?? {},
-    disagreementIndex: r?.verdict.disagreementIndex ?? null,
-    placeholder: r?.placeholder ?? false,
+    category: f.data.category ?? 'formatting',
+    verdict: r?.verdict,
+    verdictTally: r?.verdict ? tallyString(r.verdict.tally) : '',
+    disagreement: r?.verdict?.disagreementIndex ?? 0,
+    totalRuns: r?.totalRuns ?? 0,
   };
-});
-
-// Sort by Disagreement Index descending (the front-page hook),
-// with no-result fights at the bottom.
-rows.sort((a, b) => {
-  if (a.disagreementIndex == null && b.disagreementIndex == null) return 0;
-  if (a.disagreementIndex == null) return 1;
-  if (b.disagreementIndex == null) return -1;
-  return b.disagreementIndex - a.disagreementIndex;
-});
+}).sort((a, b) => (b.disagreement ?? 0) - (a.disagreement ?? 0));
 ---
-<Base title="Petty Evals — Leaderboard">
-  <section class="mb-10">
-    <p class="text-sm uppercase tracking-widest" style="color: var(--pe-muted);">Petty Evals v0.1</p>
-    <h1 class="mt-2 text-3xl md:text-5xl font-semibold leading-tight">
-      Rigorous benchmarks for problems that don't matter.
+<Base title="Petty Evals — rigorous benchmarks for problems that don't matter">
+  <section class="mb-16">
+    <h1 class="display text-5xl md:text-7xl mb-5 max-w-3xl">
+      I made four AIs <span style="color: var(--color-coral);">fight</span><br>
+      about petty dev debates.
     </h1>
-    <p class="mt-4 max-w-prose text-sm" style="color: var(--pe-muted);">
-      We run identical realistic coding prompts across frontier models, measure what they actually
-      do, and publish the verdicts. Sorted by disagreement, because consensus is boring.
+    <p class="text-lg md:text-xl max-w-2xl mb-7" style="color: var(--color-muted);">
+      Tabs or spaces? <code>===</code> or <code>==</code>? <code>let</code> or <code>const</code>?
+      I made <a href="/methodology" class="styled">the AIs actually write code</a>, then I measured
+      what they did. The receipts are below. Each fight is real data, not vibes.
     </p>
+    <div class="flex gap-3 flex-wrap">
+      <a href="#fights" class="sticker">See the fights</a>
+      <a href="/methodology" class="sticker sticker--blue">How I did it</a>
+    </div>
   </section>
 
-  <section>
-    <div class="border" style="border-color: var(--pe-rule);">
-      <table class="w-full text-sm">
-        <thead>
-          <tr class="border-b" style="border-color: var(--pe-rule);">
-            <th class="text-left px-4 py-2 font-medium">Fight</th>
-            <th class="text-left px-4 py-2 font-medium">Category</th>
-            <th class="text-left px-4 py-2 font-medium">Winner</th>
-            <th class="text-left px-4 py-2 font-medium">Disagreement</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr class="border-b last:border-b-0" style="border-color: var(--pe-rule);">
-              <td class="px-4 py-2">
-                <a href={`/fights/${row.slug}`} class="font-medium hover:underline">
-                  {row.title}
-                </a>
-                {row.placeholder && (
-                  <span class="ml-2 text-xs px-1.5 py-0.5 border tabular-nums" style="border-color: var(--pe-rule); color: var(--pe-muted);">
-                    placeholder
-                  </span>
-                )}
-                <div class="text-xs" style="color: var(--pe-muted);">{row.question}</div>
-              </td>
-              <td class="px-4 py-2 text-xs" style="color: var(--pe-muted);">{row.category}</td>
-              <td class="px-4 py-2 tabular-nums font-semibold">{row.winner ?? '—'}</td>
-              <td class="px-4 py-2 tabular-nums" style="color: var(--pe-muted);">
-                {row.disagreementIndex != null ? row.disagreementIndex.toFixed(3) : '—'}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+  <section id="fights" class="mb-16">
+    <div class="flex items-end justify-between mb-6 border-b-2 pb-3" style="border-color: var(--color-ink);">
+      <h2 class="display text-3xl">The fights</h2>
+      <span class="text-sm" style="color: var(--color-muted);">
+        sorted by Disagreement Index
+      </span>
     </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      {items.map((item) => (
+        <a href={`/fights/${item.slug}`} class="chunky p-5 block transition-transform hover:-translate-y-1">
+          <div class="text-xs font-mono mb-2" style="color: var(--color-muted);">
+            {item.category} · {item.totalRuns} samples
+          </div>
+          <div class="display text-2xl mb-3 leading-tight">
+            {item.title.replace(/[?.]$/, '')}<span style="color: var(--color-coral);">?</span>
+          </div>
+          {item.verdict ? (
+            <div class="display text-xl" style="color: var(--color-coral);">
+              {item.verdict.winner.toUpperCase()}
+              <span class="text-sm font-normal" style="color: var(--color-ink); font-family: var(--font-body);">
+                · {item.verdictTally}
+              </span>
+            </div>
+          ) : (
+            <div class="text-sm" style="color: var(--color-muted);">pending data</div>
+          )}
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <section class="my-16 chunky chunky--coral p-8 md:p-10">
+    <div class="display text-3xl md:text-4xl mb-3">Got a pettier debate?</div>
+    <p class="text-lg mb-5 max-w-xl">
+      Open a PR with a new fight. I'll run it across all four models and add your name to the byline.
+    </p>
+    <a href="https://github.com/kmelve/petty-evals/blob/main/CONTRIBUTING.md" class="sticker">
+      Submit via PR →
+    </a>
   </section>
 </Base>

@@ -1,67 +1,135 @@
 ---
 import Base from '../../layouts/Base.astro';
-import Verdict from '../../components/Verdict.astro';
-import VoteTally from '../../components/VoteTally.astro';
-import PunditPanel from '../../components/PunditPanel.astro';
-import Receipts from '../../components/Receipts.astro';
 import { getCollection } from 'astro:content';
+import VoteCard from '../../components/VoteCard.astro';
+import PunditCard from '../../components/PunditCard.astro';
+import Receipts from '../../components/Receipts.astro';
 
 export async function getStaticPaths() {
   const fights = await getCollection('fights');
-  const results = await getCollection('results');
-  const resultBySlug = new Map(results.map((r) => [r.data.slug, r.data]));
-  return fights.map((f) => ({
-    params: { slug: f.data.slug },
-    props: { fight: f.data, result: resultBySlug.get(f.data.slug) ?? null },
-  }));
+  return fights.map((f) => ({ params: { slug: f.id }, props: { fight: f } }));
 }
 
-const { fight, result } = Astro.props;
+const { fight } = Astro.props;
+const slug = fight.id;
+
+// Lazy-load the results JSON for this fight via Vite glob.
+const allResults = import.meta.glob('../../data/results/*.json', { eager: true }) as Record<string, { default: any }>;
+const resultEntry = Object.entries(allResults).find(([path]) => path.endsWith(`/${slug}.json`));
+const result = resultEntry ? (resultEntry[1] as any).default : null;
+
+function verdictSubtitle(tally: Record<string, number>, total: number): string {
+  const values = Object.values(tally);
+  const max = Math.max(...values);
+  const topCount = values.filter(v => v === max).length;
+  if (max === total) return 'All four agreed. This was supposed to be a fight.';
+  if (max === total - 1) return 'Three to one. The dissenter has thoughts (see below).';
+  if (max === 2 && topCount > 1) return "It's a tie. The AI is just as confused as we are.";
+  return 'A genuine debate. Receipts below.';
+}
+
+function tallyString(tally: Record<string, number>): string {
+  return Object.entries(tally).map(([k, v]) => `${v} ${k}`).join(' · ');
+}
+function tallyTotal(tally: Record<string, number>): number {
+  return Object.values(tally).reduce((a, b) => a + b, 0);
+}
+
+const winnerLabel = result ? result.verdict.winner.toUpperCase() : '?';
+const tallyParts = result ? tallyString(result.verdict.tally) : '';
+const totalVoters = result ? tallyTotal(result.verdict.tally) : 0;
 ---
-<Base title={`${fight.title} — Petty Evals`} description={fight.question}>
-  {result?.placeholder && (
-    <div class="mb-6 border px-4 py-2 text-xs" style="border-color: var(--pe-rule); color: var(--pe-muted);">
-      <strong style="color: var(--pe-fg);">Placeholder data.</strong>
-      The pipeline has not been executed yet against live APIs. Numbers shown are
-      illustrative and will be overwritten by the next pipeline run.
+<Base
+  title={`${fight.data.title} — Petty Evals`}
+  description={fight.data.question}
+  ogImage={`/og/${slug}.png`}
+>
+  <div class="mb-3">
+    <span class="sticker sticker--blue">{fight.data.category ?? 'formatting'}</span>
+  </div>
+  <h1 class="display text-5xl md:text-7xl mb-8 max-w-3xl">
+    {fight.data.title.replace(/[?.]$/, '')}<span style="color: var(--color-coral);">?</span>
+  </h1>
+
+  {result && (
+    <div class="mb-16">
+      <div class="display text-7xl md:text-9xl" style="color: var(--color-coral);">
+        {winnerLabel}
+      </div>
+      <div class="display text-3xl md:text-4xl mt-3">
+        {tallyParts}
+      </div>
+      <p class="mt-4 max-w-2xl text-lg" style="color: var(--color-muted);">
+        {verdictSubtitle(result.verdict.tally, totalVoters)}
+      </p>
     </div>
   )}
 
-  {result ? (
-    <>
-      <Verdict
-        question={fight.question}
-        winner={result.verdict.winner}
-        tally={result.verdict.tally}
-        disagreementIndex={result.verdict.disagreementIndex}
-      />
-      <VoteTally models={result.models} />
-      <PunditPanel models={result.models} />
-      <Receipts models={result.models} />
-
-      <section class="mb-12">
-        <h2 class="text-xs uppercase tracking-widest mb-3" style="color: var(--pe-muted);">Provenance</h2>
-        <dl class="text-sm grid grid-cols-[max-content_1fr] gap-x-6 gap-y-1">
-          <dt style="color: var(--pe-muted);">Run started</dt><dd class="tabular-nums">{result.runStartedAt}</dd>
-          <dt style="color: var(--pe-muted);">Run finished</dt><dd class="tabular-nums">{result.runFinishedAt}</dd>
-          <dt style="color: var(--pe-muted);">Total runs</dt><dd class="tabular-nums">{result.totalRuns}</dd>
-          <dt style="color: var(--pe-muted);">Total cost</dt><dd class="tabular-nums">${result.totalCostUsd.toFixed(4)} USD</dd>
-          <dt style="color: var(--pe-muted);">Classifier &kappa;</dt><dd class="tabular-nums">{result.classifierKappa ?? 'not yet measured'}</dd>
-          <dt style="color: var(--pe-muted);">Submitted by</dt><dd>{fight.submittedBy}</dd>
-          <dt style="color: var(--pe-muted);">Date added</dt><dd class="tabular-nums">{fight.dateAdded}</dd>
-        </dl>
-      </section>
-
-      <section class="mb-12">
-        <h2 class="text-xs uppercase tracking-widest mb-3" style="color: var(--pe-muted);">Prompts used</h2>
-        <ol class="space-y-2 text-sm">
-          {fight.promptVariants.map((p) => (
-            <li class="border px-3 py-2" style="border-color: var(--pe-rule);">{p}</li>
-          ))}
-        </ol>
-      </section>
-    </>
-  ) : (
-    <p>No results recorded for this fight yet.</p>
+  {result && (
+    <section class="mb-16">
+      <h2 class="display text-3xl mb-5">Who said what</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        {result.models.map((m: any) => <VoteCard model={m} />)}
+      </div>
+    </section>
   )}
+
+  {result && (
+    <section class="mb-16">
+      <h2 class="display text-3xl md:text-4xl mb-2">I asked them what they thought.</h2>
+      <p class="text-base mb-6 max-w-2xl" style="color: var(--color-muted);">
+        After all the votes were in, I showed each model the full tally and one representative
+        code sample per peer. Here's what they said.
+      </p>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        {result.models.map((m: any) => <PunditCard model={m} />)}
+      </div>
+    </section>
+  )}
+
+  {result && (
+    <section class="mb-16">
+      <details class="accordion">
+        <summary>Show me the actual code ({result.totalRuns} samples)</summary>
+        <div class="pb-6">
+          <Receipts models={result.models} />
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>How I did this (the actual nerd shit)</summary>
+        <div class="pb-8 prose">
+          <p>
+            For each of the {result.models.length} models, I ran <strong>{fight.data.promptVariants.length} different prompts</strong>,
+            each at <strong>two temperatures</strong> (0.0 and 0.7),
+            repeated <strong>10 times</strong>. That's {result.totalRuns} code samples total.
+            Total cost: <strong>${result.totalCostUsd.toFixed(2)}</strong>.
+          </p>
+          <p>
+            Each output got classified by a regex (does the first indented line start with a tab
+            or with spaces?). When the regex was ambiguous, an LLM judge broke the tie.
+          </p>
+          <p>
+            Confidence intervals are Wilson 95%. The "Disagreement Index" is normalized
+            Shannon entropy across the model votes — 0 means unanimous, 1 means maximum chaos.
+          </p>
+          <p>
+            The full methodology lives on <a href="/methodology">the nerd shit page</a>.
+            Source is on <a href="https://github.com/kmelve/petty-evals">GitHub</a>.
+          </p>
+        </div>
+      </details>
+    </section>
+  )}
+
+  <section class="my-16 chunky chunky--coral p-8 md:p-10">
+    <div class="display text-3xl md:text-4xl mb-3">Got a pettier debate?</div>
+    <p class="text-lg mb-5 max-w-xl">
+      Open a PR with a new fight. I'll run it across all four models, write up the verdict,
+      and add your name to the byline.
+    </p>
+    <a href="https://github.com/kmelve/petty-evals/blob/main/CONTRIBUTING.md" class="sticker">
+      Submit via PR →
+    </a>
+  </section>
 </Base>

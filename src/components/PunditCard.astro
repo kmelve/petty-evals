@@ -1,0 +1,16 @@
+---
+interface ModelResult {
+  id: string;
+  displayName: string;
+  vote: string;
+  punditQuote: string;
+}
+interface Props { model: ModelResult; }
+const { model } = Astro.props;
+---
+<div class="chunky chunky--blue p-5">
+  <div class="display text-lg mb-2">{model.displayName}</div>
+  <p class="text-base leading-relaxed">
+    <span style="color: var(--color-blue); font-weight: 800; font-family: var(--font-display); font-size: 1.4em; line-height: 0; margin-right: 0.1em;">"</span>{model.punditQuote}<span style="color: var(--color-blue); font-weight: 800; font-family: var(--font-display); font-size: 1.4em; line-height: 0; margin-left: 0.05em;">"</span>
+  </p>
+</div>

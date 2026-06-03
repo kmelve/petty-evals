@@ -1,55 +1,43 @@
 ---
-interface Run {
+interface RunRecord {
   variantIndex: number;
   temperature: number;
   runIndex: number;
   prompt: string;
   output: string;
   classification: string;
-  inputTokens: number;
-  outputTokens: number;
-  latencyMs: number;
-  costUsd: number;
 }
-interface ModelRow {
+interface ModelResult {
   id: string;
   displayName: string;
-  runs: Run[];
+  runs: RunRecord[];
 }
-interface Props {
-  models: ModelRow[];
-}
+interface Props { models: ModelResult[]; }
 const { models } = Astro.props;
-const hasAnyRuns = models.some((m) => m.runs.length > 0);
 ---
-<section class="mb-12">
-  <h2 class="text-xs uppercase tracking-widest mb-3" style="color: var(--pe-muted);">Receipts</h2>
-  {!hasAnyRuns && (
-    <p class="text-sm" style="color: var(--pe-muted);">
-      Per-run records appear here once the pipeline has been executed. The current results JSON
-      contains aggregated placeholder data only.
-    </p>
-  )}
-  {hasAnyRuns && models.map((m) => (
-    <details class="border mb-2" style="border-color: var(--pe-rule);">
-      <summary class="cursor-pointer px-4 py-2 text-sm font-medium">
-        {m.displayName} — {m.runs.length} runs
+<div class="space-y-2 mt-4">
+  {models.map((model) => (
+    <details class="chunky p-4">
+      <summary class="cursor-pointer font-semibold flex items-center justify-between">
+        <span>{model.displayName} — {model.runs.length} samples</span>
+        <span class="text-xs font-mono" style="color: var(--color-muted);">click to expand</span>
       </summary>
-      <div class="px-4 py-2 text-xs">
-        {m.runs.slice(0, 3).map((r) => (
-          <div class="mb-3">
-            <p style="color: var(--pe-muted);">
-              variant {r.variantIndex} · temp {r.temperature} · run {r.runIndex} ·
-              {' '}class <strong>{r.classification}</strong> · {r.inputTokens}+{r.outputTokens} tok ·
-              {' '}{r.latencyMs}ms · ${r.costUsd.toFixed(4)}
-            </p>
-            <pre class="bg-white border p-2 overflow-x-auto" style="border-color: var(--pe-rule);"><code>{r.output.slice(0, 500)}</code></pre>
+      <div class="mt-4 space-y-4">
+        {model.runs.slice(0, 3).map((run) => (
+          <div>
+            <div class="text-xs font-mono mb-2" style="color: var(--color-muted);">
+              variant {run.variantIndex} · temp {run.temperature} · run {run.runIndex} · → <strong style="color: var(--color-coral);">{run.classification}</strong>
+            </div>
+            <pre class="code-block"><code>{run.output.slice(0, 800)}{run.output.length > 800 ? '\n…' : ''}</code></pre>
           </div>
         ))}
-        {m.runs.length > 3 && (
-          <p style="color: var(--pe-muted);">{m.runs.length - 3} additional runs in the source JSON.</p>
+        {model.runs.length > 3 && (
+          <p class="text-sm" style="color: var(--color-muted);">
+            …and {model.runs.length - 3} more in
+            <code>src/data/results/{model.id}/</code> on GitHub.
+          </p>
         )}
       </div>
     </details>
   ))}
-</section>
+</div>
