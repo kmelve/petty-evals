@@ -1,9 +1,8 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter:wght@400..800&family=JetBrains+Mono:wght@400..700&display=swap');
 
 /* Petty Evals — Wes-Bos-dialed-back. Cream base, coral primary, electric blue accent.
    Chunky display type via Bricolage Grotesque. Body Inter. Mono only for code. */
-
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter:wght@400..800&family=JetBrains+Mono:wght@400..700&display=swap');
 
 @theme {
   --color-cream: #FFF8E7;
