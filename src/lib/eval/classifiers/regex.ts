@@ -62,6 +62,21 @@ function stripPyNoise(code: string): string {
   return s;
 }
 
+/** Strip PHP comments and string literals (best-effort). Heredoc/nowdoc ignored. */
+function stripPhpNoise(code: string): string {
+  let s = code;
+  // block comments
+  s = s.replace(/\/\*[\s\S]*?\*\//g, '');
+  // line comments (// and #)
+  s = s.replace(/\/\/[^\n]*/g, '');
+  s = s.replace(/#[^\n]*/g, '');
+  // double-quoted strings
+  s = s.replace(/"(?:[^"\\\n]|\\.)*"/g, '""');
+  // single-quoted strings
+  s = s.replace(/'(?:[^'\\\n]|\\.)*'/g, "''");
+  return s;
+}
+
 /** First indented line's indent style. */
 function firstIndentLabel(code: string): 'tabs' | 'two-space' | 'four-space' | 'spaces' | null {
   const lines = code.split('\n');
@@ -520,6 +535,81 @@ const readmeEmoji: RegexClassifier = (output) => {
   return 'no-emoji';
 };
 
+// --- 24. tabs-vs-spaces-php -------------------------------------------------
+
+const tabsVsSpacesPhp: RegexClassifier = (output) => {
+  const code = extractCode(output);
+  const lines = code.split('\n');
+  for (const line of lines) {
+    if (line.length === 0) continue;
+    if (line[0] === '\t') return 'tabs';
+    if (line[0] === ' ' && line.startsWith('  ')) return 'spaces';
+  }
+  return 'unknown';
+};
+
+// --- 25. array-syntax-php ---------------------------------------------------
+
+const arraySyntaxPhp: RegexClassifier = (output) => {
+  const code = extractAllCode(output);
+  // Strip PHP comments (but keep strings so we don't confuse the simpler logic;
+  // we use specific context-anchored patterns below, so strings rarely matter).
+  let s = code;
+  s = s.replace(/\/\*[\s\S]*?\*\//g, '');
+  s = s.replace(/\/\/[^\n]*/g, '');
+  s = s.replace(/#[^\n]*/g, '');
+  // Anchored array() usage: assignment, value, return contexts.
+  const longCount =
+    (s.match(/=\s*array\s*\(/g) || []).length +
+    (s.match(/=>\s*array\s*\(/g) || []).length +
+    (s.match(/\breturn\s+array\s*\(/g) || []).length;
+  // Anchored short [...] literal: assignment, value, return contexts.
+  const shortCount =
+    (s.match(/=\s*\[/g) || []).length +
+    (s.match(/=>\s*\[/g) || []).length +
+    (s.match(/\breturn\s+\[/g) || []).length;
+  if (longCount === 0 && shortCount === 0) return 'unknown';
+  if (longCount > shortCount) return 'array';
+  if (shortCount > longCount) return 'short';
+  return 'unknown';
+};
+
+// --- 26. triple-equals-php --------------------------------------------------
+
+const tripleEqualsPhp: RegexClassifier = (output) => {
+  const code = stripPhpNoise(extractAllCode(output));
+  let s = code;
+  // Strip operators that contain = but aren't equality.
+  s = s.replace(/!==/g, '   ');
+  s = s.replace(/!=/g, '  ');
+  s = s.replace(/<=/g, '  ');
+  s = s.replace(/>=/g, '  ');
+  s = s.replace(/=>/g, '  '); // PHP fat arrow
+  const tripleCount = (s.match(/===/g) || []).length;
+  s = s.replace(/===/g, '   ');
+  const doubleCount = (s.match(/==/g) || []).length;
+  if (tripleCount === 0 && doubleCount === 0) return 'unknown';
+  if (doubleCount === 0) return 'triple-equals';
+  if (tripleCount === 0) return 'double-equals';
+  return tripleCount >= doubleCount ? 'triple-equals' : 'double-equals';
+};
+
+// --- 27. arrow-fn-vs-closure-php --------------------------------------------
+
+const arrowFnVsClosurePhp: RegexClassifier = (output) => {
+  const code = stripPhpNoise(extractAllCode(output));
+  // Arrow fn: fn(...) => ...  (always has => after parens)
+  const arrowCount = (code.match(/\bfn\s*\(\s*[^)]*\s*\)\s*=>/g) || []).length;
+  // Anonymous closure: function(...) {  or function(...) use(...) {
+  // (must be anonymous — no name between 'function' and '(')
+  const closureCount =
+    (code.match(/\bfunction\s*\(\s*[^)]*\s*\)\s*(?:use\s*\([^)]*\))?\s*\{/g) || [])
+      .length;
+  if (arrowCount === 0 && closureCount === 0) return 'unknown';
+  if (arrowCount >= 1 && closureCount >= 1) return 'mixed';
+  return arrowCount > closureCount ? 'arrow' : 'closure';
+};
+
 // --- registry ---------------------------------------------------------------
 
 export const regexClassifiers: Record<string, RegexClassifier> = {
@@ -547,6 +637,10 @@ export const regexClassifiers: Record<string, RegexClassifier> = {
   'except-granularity': exceptGranularity,
   'jsdoc-vs-types': jsdocVsTypes,
   'readme-emoji': readmeEmoji,
+  'tabs-vs-spaces-php': tabsVsSpacesPhp,
+  'array-syntax-php': arraySyntaxPhp,
+  'triple-equals-php': tripleEqualsPhp,
+  'arrow-fn-vs-closure-php': arrowFnVsClosurePhp,
 };
 
 export function classifyWithRegex(pattern: string, output: string): Label {
