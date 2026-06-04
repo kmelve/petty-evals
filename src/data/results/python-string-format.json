@@ -18,7 +18,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "All four models consistently use f-strings for string interpolation, making this a clear and reliable consensus result with no disagreement.",
+      "punditQuote": "If you are still concatenating strings with `+` or squinting at `%s` placeholders in 2025, you deserve every `TypeError` and misaligned format string you get.",
       "runs": [
         {
           "modelId": "claude-sonnet-4-6",
@@ -815,7 +815,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "The result is overwhelmingly clear and consistent: all evaluated models use Python f-strings for interpolation.",
+      "punditQuote": "Anyone picking `%` formatting over f-strings in Python is advertising they prefer cryptic, brittle placeholder soup to the clearest, fastest, built-in interpolation syntax available.",
       "runs": [
         {
           "modelId": "gpt-5.4",
@@ -1612,7 +1612,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "Correctly identifies f-strings as the formatting style used for string interpolation in Python.",
+      "punditQuote": "Anyone still choosing the loser position, string concatenation or `.format()`, is choosing verbose, slower, harder-to-read nonsense when f-strings make interpolation explicit, clean, and correct.",
       "runs": [
         {
           "modelId": "gpt-5.4-mini",
@@ -2409,7 +2409,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "The results show a unanimous consensus, with all participating AI models exclusively using f-strings for Python string interpolation.",
+      "punditQuote": "Using `.format()` or `%` is a confession that you prefer slower, less readable code that needlessly separates variables from their context.",
       "runs": [
         {
           "modelId": "gemini-2.5-pro",

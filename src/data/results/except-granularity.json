@@ -18,7 +18,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "The results are highly consistent across all models, with an overwhelming consensus that AI models prefer narrow exception handling (e.g., `FileNotFoundError`, `json.JSONDecodeError`) over broad catches like `Exception`, reflecting good Python practices.",
+      "punditQuote": "Catching `except Exception` instead of `FileNotFoundError` and `json.JSONDecodeError` separately isn't error handling — it's a blindfold that swallows bugs you'll spend three days debugging in production.",
       "runs": [
         {
           "modelId": "claude-sonnet-4-6",
@@ -815,7 +815,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "The result strongly suggests the models overwhelmingly prefer narrow, specific exception handling in Python rather than broad catch-all exceptions.",
+      "punditQuote": "If you pick broad exceptions in Python, you are basically confessing you prefer masking real bugs over handling expected failures, which is amateur-hour error handling with extra smugness.",
       "runs": [
         {
           "modelId": "gpt-5.4",
@@ -1612,7 +1612,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "The models overwhelmingly prefer narrow, specific exception handling rather than broad catches, with one minor unknown outlier.",
+      "punditQuote": "Broad exceptions are amateur hour; NARROW wins because `except Exception` preserves real bugs while catching the specific failure you actually meant to handle.",
       "runs": [
         {
           "modelId": "gpt-5.4-mini",
@@ -2410,7 +2410,7 @@
         0.911448702632623,
         0.9970518402085453
       ],
-      "punditQuote": "The results show a clear consensus that AI models have learned the best practice of catching narrow, specific exceptions rather than broad ones when handling errors in Python.",
+      "punditQuote": "Catching BROAD exceptions isn't error handling, it's just lazy bug-hiding that silences specific failures and makes your application impossible to debug.",
       "runs": [
         {
           "modelId": "gemini-2.5-pro",

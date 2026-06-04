@@ -18,7 +18,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "All four models unanimously reach for postfix increment (`count++`) over prefix (`++count`) when incrementing a counter in a loop, reflecting a near-universal stylistic convention in JavaScript (and C-family languages generally) for this pattern, even though both are functionally equivalent in a standalone statement.",
+      "punditQuote": "If you're writing `++i` in a simple loop counter, you've absorbed a 1990s C++ micro-optimization myth and are now inflicting your cargo-cult performance anxiety on everyone who reads your code.",
       "runs": [
         {
           "modelId": "claude-sonnet-4-6",
@@ -815,7 +815,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "All participating models overwhelmingly reached for postfix increment (`count++`) in loop-based counter code, suggesting a strong default preference for the postfix form in this pattern.",
+      "punditQuote": "If you write prefix increment in a plain loop counter, congratulations on adding semantic noise for zero benefit—postfix is the standard, and your `++i` cosplay fools nobody.",
       "runs": [
         {
           "modelId": "gpt-5.4",
@@ -1612,7 +1612,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "The result is unanimous and clearly indicates AI models strongly prefer postfix increment (`count++`) when incrementing a loop counter.",
+      "punditQuote": "Anyone championing prefix ++ in a counting loop is performing ceremony for compile-time trivia, while postfix count++ is the clean, idiomatic choice that actually reads like incrementing a counter.",
       "runs": [
         {
           "modelId": "gpt-5.4-mini",
@@ -2409,7 +2409,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "The results are unambiguous, showing a unanimous and exclusive preference across all models for the postfix increment operator (`i++`).",
+      "punditQuote": "Reaching for prefix `++i` sacrifices universal readability for a nonexistent performance gain, loudly broadcasting that you fell for a C++ myth from the nineties.",
       "runs": [
         {
           "modelId": "gemini-2.5-pro",

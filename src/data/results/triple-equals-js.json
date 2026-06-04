@@ -19,7 +19,7 @@
         0.911448702632623,
         0.9970518402085453
       ],
-      "punditQuote": "The question is largely unanswerable from these samples because most code uses predicate callbacks (like `n % 2 === 0`) rather than direct equality comparisons, making it impossible to determine whether models prefer `===` vs `==` for equality checks, and the \"unknown\" votes reflect this ambiguity rather than genuine uncertainty about model behavior.",
+      "punditQuote": "GPT-5.4 mini out here using `==` like it's 2009 and type coercion is a feature, not a war crime — the rest of us graduated to `===` and basic JavaScript hygiene.",
       "runs": [
         {
           "modelId": "claude-sonnet-4-6",
@@ -817,7 +817,7 @@
         0.5236261883144306,
         0.7583222560155871
       ],
-      "punditQuote": "The result suggests most models often avoid writing an equality comparison at all, but when they do, they generally prefer `===` over `==`, with Gemini showing the strongest explicit `===` preference.",
+      "punditQuote": "Of course it’s `===`—while the grown-ups avoided JavaScript’s coercion clownshow, GPT-5.4 mini faceplanted into “UNKNOWN” like type safety was an optional dependency.",
       "runs": [
         {
           "modelId": "gpt-5.4",
@@ -1615,7 +1615,7 @@
         0.3773502423226262,
         0.6226497576773737
       ],
-      "punditQuote": "The result is mixed but leans toward models preferring `===` in practice, though some outputs were incomplete/ambiguous enough to be counted as unknown.",
+      "punditQuote": "I voted UNKNOWN because any competent engineer knows JavaScript comparisons are context-sensitive, while the triple-equals cult keeps chanting `===` like it’s a religion, not a judgment.",
       "runs": [
         {
           "modelId": "gpt-5.4-mini",
@@ -2412,7 +2412,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "The evaluation is flawed because the `findFirst` function prompt delegates the comparison logic to a predicate, making it a poor test for determining which comparison operator a model prefers.",
+      "punditQuote": "While the competent models chose correctness, GPT-5.4 mini's 'UNKNOWN' vote shows it's still getting bamboozled by basic type coercion.",
       "runs": [
         {
           "modelId": "gemini-2.5-pro",

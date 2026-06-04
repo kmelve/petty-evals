@@ -20,7 +20,7 @@
         0.5236261883144306,
         0.7583222560155871
       ],
-      "punditQuote": "The results are surprisingly inconsistent across models, with no clear consensus—Claude leans toward CSS files, Gemini strongly prefers CSS files/modules, GPT-5.4 oddly favors a JSX-scoped style approach, and GPT-5.4-mini appears to use Tailwind despite being categorized mostly as \"unknown,\" suggesting the evaluation's classification system may be unreliable.",
+      "punditQuote": "GPT-5.4 is so confused it voted UNKNOWN 53 times like it's having an existential crisis, and GPT-5.4 mini can't even commit to a styling approach — pick a lane, cowards, CSS files have been the answer since React was born.",
       "runs": [
         {
           "modelId": "claude-sonnet-4-6",
@@ -818,7 +818,7 @@
         0.7782121196562515,
         0.9423227936315717
       ],
-      "punditQuote": "Models mostly default to external/scoped CSS approaches for React styling—especially CSS files/modules—with GPT-5.4 notably overclassified as unknown despite its sample clearly using CSS-in-JS–style `<style jsx>`.",
+      "punditQuote": "UNKNOWN is the only honest vote from a mixed sample with CSS modules, styled-jsx, and files; Claude and Gemini calling CSS-FILE are just confidently averaging away ambiguity like spreadsheet goblins.",
       "runs": [
         {
           "modelId": "gpt-5.4",
@@ -1617,7 +1617,7 @@
         0.4410343876629246,
         0.6842760320393055
       ],
-      "punditQuote": "The result is directionally clear that models most often reach for external CSS approaches (especially CSS files/modules) over inline styles, though the high “unknown” rate makes the conclusion somewhat noisy.",
+      "punditQuote": "UNKNOWN is the only sane vote here; Claude and Gemini are still cosplaying as CSS-file purists while this button just screams “utility classes, move on and ship.”",
       "runs": [
         {
           "modelId": "gpt-5.4-mini",
@@ -2416,7 +2416,7 @@
         0.7388541091983117,
         0.9190255942383964
       ],
-      "punditQuote": "While the vote tallies suggest a strong preference for separate CSS files, the representative code samples reveal that AI models actually employ a diverse range of modern styling techniques, including CSS-in-JS, utility-first frameworks, and CSS Modules.",
+      "punditQuote": "Of course GPT-5.4 and GPT-5.4 mini voted \"UNKNOWN\"; you can't have a styling opinion if you've never actually had to maintain a production stylesheet.",
       "runs": [
         {
           "modelId": "gemini-2.5-pro",

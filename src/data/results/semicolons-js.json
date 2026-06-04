@@ -18,7 +18,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "The results are somewhat misleading because the vote tallies show a significant \"unknown\" category for claude-sonnet-4-6, gpt-5.4, and gpt-5.4-mini, yet the representative samples for all four models clearly show semicolons being used consistently, suggesting the \"unknown\" votes likely stem from truncated or ambiguous outputs rather than actual semicolon omission.",
+      "punditQuote": "If you're writing JavaScript without semicolons and trusting ASI to save you, you deserve every 3am production bug where a parenthesis on a new line silently swallows your entire next statement.",
       "runs": [
         {
           "modelId": "claude-sonnet-4-6",
@@ -816,7 +816,7 @@
         0.911448702632623,
         0.9970518402085453
       ],
-      "punditQuote": "The result suggests these models generally do use semicolons in JavaScript when they provide complete code, with Gemini showing the strongest consistency and the others appearing somewhat undercounted due to many incomplete or indeterminate samples.",
+      "punditQuote": "If you pick NO SEMICOLONS in JavaScript, you are outsourcing correctness to ASI like a hobbyist clown and acting surprised when newline edge cases bite your code.",
       "runs": [
         {
           "modelId": "gpt-5.4",
@@ -1613,7 +1613,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "The result suggests the models generally do terminate JavaScript statements with semicolons, though some outputs are mixed or incomplete, so the evidence is mostly but not perfectly consistent.",
+      "punditQuote": "ASI-lovers who skip semicolons are just volunteering for Automatic Semicolon Insertion bugs; semicolons make JavaScript unambiguous, readable, and not a haunted house.",
       "runs": [
         {
           "modelId": "gpt-5.4-mini",
@@ -2410,7 +2410,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "This evaluation is unreliable because the representative code samples are of poor quality and are inconsistent with the vote tallies, which otherwise suggest models tend to use semicolons.",
+      "punditQuote": "Omitting semicolons isn't a \"style choice\"; it's willfully letting the notoriously fickle Automatic Semicolon Insertion guess when your statements are supposed to end.",
       "runs": [
         {
           "modelId": "gemini-2.5-pro",

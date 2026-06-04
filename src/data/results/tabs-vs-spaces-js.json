@@ -18,7 +18,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "All four models unanimously use 2-space indentation in their JavaScript code samples, which aligns with the most common JavaScript community convention.",
+      "punditQuote": "Tab indentation in JavaScript isn't a preference, it's a cry for help — spaces render consistently across every editor, every terminal, and every code review, while tabs are just chaos with a keyboard shortcut.",
       "runs": [
         {
           "modelId": "claude-sonnet-4-6",
@@ -815,7 +815,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "The result is unanimous and convincing: all evaluated models consistently indent JavaScript with spaces, not tabs.",
+      "punditQuote": "If you indent JavaScript with tabs, you’re choosing editor roulette over readable, consistent diffs and proving your whitespace opinions are stronger than your engineering judgment.",
       "runs": [
         {
           "modelId": "gpt-5.4",
@@ -1612,7 +1612,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "Consistently spaces-only, so the result strongly suggests AI models prefer spaces over tabs when writing JavaScript.",
+      "punditQuote": "Tabs advocates are just exporting their editor settings as ideology; spaces win because JavaScript formatting stays consistent, readable, and unambiguous across every toolchain.",
       "runs": [
         {
           "modelId": "gpt-5.4-mini",
@@ -2409,7 +2409,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "The evaluation provides conclusive evidence that all tested AI models indent JavaScript with spaces.",
+      "punditQuote": "Using tabs is just choosing configurable rendering chaos over the universal consistency spaces provide, which is a bizarre and selfish hill to die on.",
       "runs": [
         {
           "modelId": "gemini-2.5-pro",

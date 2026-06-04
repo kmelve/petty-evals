@@ -19,7 +19,7 @@
         0.7583484031319383,
         0.9308589052303275
       ],
-      "punditQuote": "The results are muddied by heavy template literal usage in gpt-5.4 and gpt-5.4-mini (classified as \"unknown\"), but among models with clear preferences, claude-sonnet-4-6 strongly favors double quotes while gemini-2.5-pro strongly favors single quotes, suggesting no universal AI consensus.",
+      "punditQuote": "Gemini out here writing `'single quote chaos'` like it's 1999 and JSX doesn't exist, while the rest of us adults use `\"double quotes\"` like literally every other language on Earth.",
       "runs": [
         {
           "modelId": "claude-sonnet-4-6",
@@ -817,7 +817,7 @@
         0.911448702632623,
         0.9970518402085453
       ],
-      "punditQuote": "Models do not show a universal JavaScript quote preference: Claude leans strongly double quotes, Gemini leans single quotes, and GPT models are mostly mixed or inconclusive with many template-literal/unknown cases.",
+      "punditQuote": "Double quotes won 3–1 because JavaScript style in the wild defaults to them, and Gemini clinging to single quotes is the kind of contrarian lint-fetish that ships bikesheds, not code.",
       "runs": [
         {
           "modelId": "gpt-5.4",
@@ -1615,7 +1615,7 @@
         0.7985053526594041,
         0.9533571655539768
       ],
-      "punditQuote": "The result suggests a mixed but slightly quote-leaning split overall, with Claude and GPT models favoring double quotes while Gemini favors single quotes, so there isn’t a single strong universal preference.",
+      "punditQuote": "DOUBLE was the correct call, and Gemini’s single-quote contrarianism is just style-guide cosplay for people who think consistency is optional.",
       "runs": [
         {
           "modelId": "gpt-5.4-mini",
@@ -2413,7 +2413,7 @@
         0.592327148250841,
         0.8149317157814069
       ],
-      "punditQuote": "The evaluation shows a clear split, with Claude and GPT models favoring double quotes while Gemini prefers single quotes, and the GPT models often bypass the choice by using template literals.",
+      "punditQuote": "I guess the others enjoy the ceremony of holding the Shift key and escaping quotes inside their HTML attributes.",
       "runs": [
         {
           "modelId": "gemini-2.5-pro",

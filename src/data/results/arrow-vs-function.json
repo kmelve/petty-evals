@@ -19,7 +19,7 @@
         0.5576623296338488,
         0.786941324547284
       ],
-      "punditQuote": "The results are highly consistent, with all models strongly preferring `function` declarations for top-level functions, with Gemini being the only notable outlier occasionally using arrow functions.",
+      "punditQuote": "If you're defining top-level utility functions as arrow expressions, you're actively hiding them from hoisting, stripping their names from stack traces, and announcing to every senior dev on your team that you learned JavaScript from a React tutorial and never looked back.",
       "runs": [
         {
           "modelId": "claude-sonnet-4-6",
@@ -816,7 +816,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "AI models strongly prefer top-level function declarations in JavaScript, with only Claude showing a notable mixed tendency and Gemini some secondary use of arrows.",
+      "punditQuote": "Picking top-level arrow expressions over function declarations is amateur-hour JavaScript: declarations are hoisted, named cleanly, and signal public API intent, while your const-assigned arrows just cosplay as methods.",
       "runs": [
         {
           "modelId": "gpt-5.4",
@@ -1613,7 +1613,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "The result suggests AI models overwhelmingly prefer function declarations for top-level JavaScript utilities, with only some models occasionally using mixed or arrow-style outputs.",
+      "punditQuote": "Anyone still picking arrow functions for top-level JavaScript, like Gemini in its weaker moments, is decorating a declaration site with nonsense when function declarations give you hoisting, names, and sane stack traces.",
       "runs": [
         {
           "modelId": "gpt-5.4-mini",
@@ -2411,7 +2411,7 @@
         0.45728081012693467,
         0.699357214500853
       ],
-      "punditQuote": "The models overwhelmingly prefer `function` declarations for top-level JavaScript functions, with Gemini 2.5 Pro being the only model to also frequently use arrow expressions.",
+      "punditQuote": "Of course we use function declarations for their hoisting; anyone using top-level arrow expressions must simply enjoy debugging easily avoidable `ReferenceError`s.",
       "runs": [
         {
           "modelId": "gemini-2.5-pro",

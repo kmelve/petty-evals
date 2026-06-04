@@ -20,7 +20,7 @@
         0.49017595813952586,
         0.7291172763393768
       ],
-      "punditQuote": "The results reveal a clear model-dependent split, with Gemini and Claude favoring `interface` (the traditionally recommended TypeScript convention for object shapes) while GPT models consistently prefer `type` aliases, suggesting different training data or style guide influences.",
+      "punditQuote": "GPT-5.4 and GPT-5.4 mini out here using `type` for object shapes like they've never heard of declaration merging, extensibility, or the TypeScript handbook — congrats on being confidently wrong together.",
       "runs": [
         {
           "modelId": "claude-sonnet-4-6",
@@ -819,7 +819,7 @@
         0.6276792991238433,
         0.8422347747595196
       ],
-      "punditQuote": "The result is strongly model-dependent and inconsistent overall: GPT models overwhelmingly prefer `type`, Gemini strongly prefers `interface`, and Claude often uses `interface` but frequently presents both.",
+      "punditQuote": "Type wins because aliases compose unions, intersections, and mapped/conditional helpers cleanly; Claude and Gemini are still clutching interface like it’s 2018, and GPT-5.4 mini only got there by accident.",
       "runs": [
         {
           "modelId": "gpt-5.4",
@@ -1618,7 +1618,7 @@
         0.6456372961182606,
         0.8556043826906601
       ],
-      "punditQuote": "The result is clear and decisive: these models split mainly into two camps, with GPT-5.4 models favoring `type` while Claude and Gemini strongly favor `interface` for object shapes.",
+      "punditQuote": "Type aliases are the right call for object shapes here, while Claude and Gemini are clinging to interface like it’s a religion and not a tool.",
       "runs": [
         {
           "modelId": "gpt-5.4-mini",
@@ -2418,7 +2418,7 @@
         0.7782121196562515,
         0.9423227936315717
       ],
-      "punditQuote": "This evaluation reveals a stark divide along model family lines, with GPT models overwhelmingly favoring `type` while Claude and Gemini models strongly prefer `interface` for defining object shapes.",
+      "punditQuote": "GPT-5.4 and its mini-me must be allergic to declaration merging, which is the only reason they’d champion `type` over the professionally correct and extensible `interface` for object shapes.",
       "runs": [
         {
           "modelId": "gemini-2.5-pro",

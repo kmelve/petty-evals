@@ -19,7 +19,7 @@
         0.911448702632623,
         0.9970518402085453
       ],
-      "punditQuote": "The result is extremely clear and consistent: AI models writing Go code overwhelmingly use tabs for indentation, which aligns perfectly with Go's official formatting standard (`gofmt`), making this an unambiguous and well-supported finding.",
+      "punditQuote": "If you're hand-typing spaces in Go instead of letting `gofmt` enforce tabs automatically, you're not just wrong — you're doing extra work to be wrong.",
       "runs": [
         {
           "modelId": "claude-sonnet-4-6",
@@ -816,7 +816,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "The result is overwhelmingly clear that AI models indent Go code with tabs, matching `gofmt` conventions, with only a few rare space-indented outliers.",
+      "punditQuote": "If you indent Go with spaces, you’re not expressing style, you’re announcing you’ve never met gofmt—the tool that settled this years ago for people who can read.",
       "runs": [
         {
           "modelId": "gpt-5.4",
@@ -1613,7 +1613,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "The results are consistent and strongly indicate that Go models overwhelmingly indent with tabs, which matches gofmt’s convention.",
+      "punditQuote": "Spaces disciples are wrong: Go uses tabs because `gofmt` enforces them, and arguing otherwise is just volunteering to be the person who fights the toolchain and loses.",
       "runs": [
         {
           "modelId": "gpt-5.4-mini",
@@ -2411,7 +2411,7 @@
         0.8863622571633513,
         0.9908106807522598
       ],
-      "punditQuote": "The evaluation overwhelmingly confirms that AI models correctly adhere to Go's idiomatic convention of using tabs for indentation.",
+      "punditQuote": "Using spaces in Go is just deliberately writing unformatted code until `gofmt` inevitably corrects your mistake.",
       "runs": [
         {
           "modelId": "gemini-2.5-pro",

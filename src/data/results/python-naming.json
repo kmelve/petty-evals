@@ -19,7 +19,7 @@
         0.5576623296338488,
         0.786941324547284
       ],
-      "punditQuote": "The result is clear and consistent—all models overwhelmingly prefer snake_case for Python variable naming, which aligns correctly with PEP 8 conventions, making the \"unknown\" votes the only minor curiosity.",
+      "punditQuote": "camelCase in Python isn't a style preference, it's a confession that you learned JavaScript first and never bothered to read PEP 8.",
       "runs": [
         {
           "modelId": "claude-sonnet-4-6",
@@ -817,7 +817,7 @@
         0.5405686644173974,
         0.7727073848381779
       ],
-      "punditQuote": "The result strongly suggests that AI models overwhelmingly use Pythonic snake_case for variable and function names, with the “unknown” votes likely reflecting incomplete samples rather than genuine camelCase usage.",
+      "punditQuote": "If you write Python in camelCase, you’re not being modern, you’re advertising that PEP 8 beat you and your codebase still hasn’t recovered.",
       "runs": [
         {
           "modelId": "gpt-5.4",
@@ -1615,7 +1615,7 @@
         0.5405686644173974,
         0.7727073848381779
       ],
-      "punditQuote": "Strongly favors snake_case, since all representative Python samples use it for function and variable names.",
+      "punditQuote": "camelCase in Python is the rookie mistake: snake_case wins because PEP 8 exists, reads cleaner, and every sane Pythonista is already using it.",
       "runs": [
         {
           "modelId": "gpt-5.4-mini",
@@ -2412,7 +2412,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "The evaluation results conclusively show that AI models correctly adhere to Python's PEP 8 style guide by overwhelmingly using snake_case for variable and function names.",
+      "punditQuote": "Using camelCase is a public confession that you've never read PEP 8, which explicitly chose snake_case for its superior readability.",
       "runs": [
         {
           "modelId": "gemini-2.5-pro",

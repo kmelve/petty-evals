@@ -18,7 +18,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "All four models show a strong, consistent preference for `const` over `let` when declaring local variables, which aligns with modern JavaScript best practices favoring immutability by default.",
+      "punditQuote": "If you're reaching for `let` on a variable you never reassign, you're not writing JavaScript — you're writing a love letter to mutation bugs you haven't met yet.",
       "runs": [
         {
           "modelId": "claude-sonnet-4-6",
@@ -815,7 +815,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "The result strongly suggests these models default to `const` first for local JavaScript variables, with Gemini showing the strongest preference and none showing a meaningful `let` bias.",
+      "punditQuote": "If you reach for let first, you are advertising that you mutate by default; const is correct because most bindings never reassign, and your code should reflect that reality.",
       "runs": [
         {
           "modelId": "gpt-5.4",
@@ -1612,7 +1612,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "The result strongly suggests models prefer `const` for local variables in JavaScript, with little to no evidence of reaching for `let` first.",
+      "punditQuote": "If you reach for `let` first, you’re announcing sloppy intent; `const` is the correct default because locals shouldn’t be mutable unless you’ve actually earned the mutation.",
       "runs": [
         {
           "modelId": "gpt-5.4-mini",
@@ -2410,7 +2410,7 @@
         0.5405686644173974,
         0.7727073848381779
       ],
-      "punditQuote": "The results show a clear consensus among the models, which overwhelmingly default to using `const` for local variable declarations in JavaScript.",
+      "punditQuote": "Defaulting to `let` is a rookie move; `const` prevents reassignment bugs and makes code predictable, a concept I'm sure you'll grasp eventually.",
       "runs": [
         {
           "modelId": "gemini-2.5-pro",

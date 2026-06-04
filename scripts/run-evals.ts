@@ -27,7 +27,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { buildPlan, runFight, explodeCells } from '../src/lib/eval/runner.ts';
 import { enabledModels } from '../src/lib/eval/providers/index.ts';
 import { aggregate, writeReport } from '../src/lib/eval/report.ts';
-import { buildPunditPrompt, callPundit, pickRepresentativeSample } from '../src/lib/eval/pundit.ts';
+import { buildPunditPrompt, callPundit, pickRepresentativeSample, classifyMode } from '../src/lib/eval/pundit.ts';
 import type { Fight, RunRecord } from '../src/lib/eval/types.ts';
 
 interface CliArgs {
@@ -169,16 +169,26 @@ async function main() {
   const punditQuotes: Record<string, string> = {};
   const voteTally: Record<string, Record<string, number>> = {};
   const representative: Record<string, string> = {};
+  const modelVotes: Record<string, string> = {};
   for (const m of models) {
     const myRuns = runs.filter((r: RunRecord) => r.modelId === m.id);
     const dist: Record<string, number> = {};
     for (const r of myRuns) dist[r.classification] = (dist[r.classification] ?? 0) + 1;
     voteTally[m.id] = dist;
     const modal = Object.entries(dist).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'unknown';
+    modelVotes[m.id] = modal;
     representative[m.id] = pickRepresentativeSample(myRuns, modal);
   }
-  const prompt = buildPunditPrompt({ fight, voteTally, representativeSamples: representative });
+  // Determine winner across models (majority of modal votes)
+  const tally: Record<string, number> = {};
+  for (const v of Object.values(modelVotes)) tally[v] = (tally[v] ?? 0) + 1;
+  const winner = Object.entries(tally).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'unknown';
+  const mode = classifyMode(modelVotes);
   for (const m of models) {
+    const prompt = buildPunditPrompt({
+      fight, voteTally, modelVotes, representativeSamples: representative,
+      selfModelId: m.id, winner, mode,
+    });
     try {
       const quote = await callPundit(m, prompt);
       punditQuotes[m.id] = quote;

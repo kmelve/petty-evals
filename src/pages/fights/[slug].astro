@@ -22,10 +22,10 @@ function verdictSubtitle(tally: Record<string, number>, total: number): string {
   const values = Object.values(tally);
   const max = Math.max(...values);
   const topCount = values.filter(v => v === max).length;
-  if (max === total) return 'All four agreed. This was supposed to be a fight.';
-  if (max === total - 1) return 'Three to one. The dissenter has thoughts (see below).';
-  if (max === 2 && topCount > 1) return "It's a tie. The AI is just as confused as we are.";
-  return 'A genuine debate. Receipts below.';
+  if (max === total) return 'Unanimous. Anyone disagreeing with this in 2026 needs to log off.';
+  if (max === total - 1) return 'Three against one. The dissenter is about to be put on blast.';
+  if (max === 2 && topCount > 1) return 'It is a TIE. Two against two. They are throwing hands below.';
+  return 'A real fight. Scroll for the dunks.';
 }
 
 function tallyString(tally: Record<string, number>): string {
@@ -76,10 +76,10 @@ const totalVoters = result ? tallyTotal(result.verdict.tally) : 0;
 
   {result && (
     <section class="mb-16">
-      <h2 class="display text-3xl md:text-4xl mb-2">I asked them what they thought.</h2>
+      <h2 class="display text-3xl md:text-4xl mb-2">The pundit panel.</h2>
       <p class="text-base mb-6 max-w-2xl" style="color: var(--color-muted);">
-        After all the votes were in, I showed each model the full tally and one representative
-        code sample per peer. Here's what they said.
+        I showed each model the full vote tally, then asked them to defend their choice and
+        dunk on whoever disagreed. Receipts attached.
       </p>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
         {result.models.map((m: any) => <PunditCard model={m} />)}

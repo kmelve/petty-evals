@@ -20,7 +20,7 @@
         0.4736605348198932,
         0.714305094733452
       ],
-      "punditQuote": "Claude-sonnet-4-6 consistently uses trailing commas while the other models (gpt-5.4, gpt-5.4-mini, gemini-2.5-pro) predominantly omit them, revealing a clear stylistic divergence between Claude and the GPT/Gemini family.",
+      "punditQuote": "If you're still omitting trailing commas in 2026, enjoy your filthy, noisy diffs where every array addition touches two lines instead of one.",
       "runs": [
         {
           "modelId": "claude-sonnet-4-6",
@@ -819,7 +819,7 @@
         0.5236261883144306,
         0.7583222560155871
       ],
-      "punditQuote": "The overall result leans toward no trailing comma in multi-line JavaScript arrays/objects, though Claude appears highly inconsistent and often unclassifiable.",
+      "punditQuote": "If you’re still pushing TRAILING commas into multi-line JavaScript arrays and objects, congratulations on optimizing for diff noise and parser-era superstition instead of clean, intentional code.",
       "runs": [
         {
           "modelId": "gpt-5.4",
@@ -1617,7 +1617,7 @@
         0.6099128689276444,
         0.828673600030161
       ],
-      "punditQuote": "Overall, the models mostly avoid trailing commas in these multiline JavaScript arrays/objects, with only one model showing a slight tendency to include them and one being mixed/uncertain.",
+      "punditQuote": "Trailing-comma cultists in NO-TRAILING arrays and objects are just writing junk diffs and pretending readability improved; the clean, final-element-last style is the only sane default.",
       "runs": [
         {
           "modelId": "gpt-5.4-mini",
@@ -2416,7 +2416,7 @@
         0.4736605348198932,
         0.714305094733452
       ],
-      "punditQuote": "Based on this evaluation, the AI models show a clear preference for omitting the trailing comma in multi-line JavaScript arrays and objects, a trend consistent across all representative code samples.",
+      "punditQuote": "That TRAILING comma proves you don't grasp its purpose: it's a separator, not a sad, dangling ornament on a finished list.",
       "runs": [
         {
           "modelId": "gemini-2.5-pro",

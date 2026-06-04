@@ -7,10 +7,14 @@ interface ModelResult {
 }
 interface Props { model: ModelResult; }
 const { model } = Astro.props;
+const verdictLabel = (model.vote || '').toUpperCase();
 ---
 <div class="chunky chunky--blue p-5">
-  <div class="display text-lg mb-2">{model.displayName}</div>
+  <div class="flex items-baseline justify-between mb-3 gap-3">
+    <div class="display text-lg leading-tight">{model.displayName}</div>
+    <div class="text-xs font-mono uppercase tracking-wide" style="color: var(--color-blue);">voted {verdictLabel}</div>
+  </div>
   <p class="text-base leading-relaxed">
-    <span style="color: var(--color-blue); font-weight: 800; font-family: var(--font-display); font-size: 1.4em; line-height: 0; margin-right: 0.1em;">"</span>{model.punditQuote}<span style="color: var(--color-blue); font-weight: 800; font-family: var(--font-display); font-size: 1.4em; line-height: 0; margin-left: 0.05em;">"</span>
+    <span style="color: var(--color-blue); font-weight: 800; font-family: var(--font-display); font-size: 1.4em; line-height: 0; margin-right: 0.1em;">&ldquo;</span>{model.punditQuote}<span style="color: var(--color-blue); font-weight: 800; font-family: var(--font-display); font-size: 1.4em; line-height: 0; margin-left: 0.05em;">&rdquo;</span>
   </p>
 </div>

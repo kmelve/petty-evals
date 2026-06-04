@@ -19,7 +19,7 @@
         0.5405686644173974,
         0.7727073848381779
       ],
-      "punditQuote": "All four models consistently place test files in a dedicated top-level test folder (named either `tests/` or `test/`), separated from source code — none of them actually used true colocation (test files alongside source files in the same directory), making the \"colocated\" vote category a misnomer likely triggered by the separate-but-parallel folder structure.",
+      "punditQuote": "Sure, colocate your tests with your source files so your `dist/` bundle ships with `*.test.ts` garbage and your `src/` directory looks like a flea market — real professional, guys.",
       "runs": [
         {
           "modelId": "claude-sonnet-4-6",
@@ -817,7 +817,7 @@
         0.8407464267703738,
         0.9737713012941221
       ],
-      "punditQuote": "Results are mixed overall, but the stronger tendency is toward a separate `test`/`tests` folder rather than colocated tests, with model-specific behavior sharply split.",
+      "punditQuote": "Claude face-planted into a cargo-cult `tests/` folder while the rest of us kept tests where developers actually find and maintain them: right next to the code.",
       "runs": [
         {
           "modelId": "gpt-5.4",
@@ -1615,7 +1615,7 @@
         0.7583484031319383,
         0.9308589052303275
       ],
-      "punditQuote": "The models split between colocated and a separate test folder, with a slight overall lean toward colocating tests.",
+      "punditQuote": "Co-located wins, because Claude’s “tests-folder” detour just adds path noise and makes refactors miserable—classic lost-the-room energy.",
       "runs": [
         {
           "modelId": "gpt-5.4-mini",
@@ -2413,7 +2413,7 @@
         0.6099128689276444,
         0.828673600030161
       ],
-      "punditQuote": "The models' vote tallies show a strong preference for colocating tests, but their representative code samples unanimously use a separate top-level tests folder.",
+      "punditQuote": "While the adults colocated tests for maintainability, Claude was building a separate `tests` folder, proving it values arbitrary separation over actual engineering efficiency.",
       "runs": [
         {
           "modelId": "gemini-2.5-pro",

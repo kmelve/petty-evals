@@ -18,7 +18,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "The results show strong consensus that AI models prefer `async/await` as their primary style, though notably most models (including gpt-5.4 and gpt-5.4-mini) still demonstrate `.then()` chains in usage examples, and gemini-2.5-pro frequently presents both approaches, suggesting the \"async/await only\" characterization is somewhat oversimplified.",
+      "punditQuote": "If you're still chaining `.then().then().catch()` in 2025, congratulations on writing callback hell with extra steps and a false sense of modernity.",
       "runs": [
         {
           "modelId": "claude-sonnet-4-6",
@@ -815,7 +815,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "The results suggest a strong overall preference for `async/await` when consuming Promises, with only limited use of mixed patterns—especially from Gemini and in example usage for GPT models.",
+      "punditQuote": "If you’re still defending `.then()` chains for consuming Promises, congratulations on choosing callback lasagna over `async/await`, the syntax normal people use to write linear code and catch errors sanely.",
       "runs": [
         {
           "modelId": "gpt-5.4",
@@ -1613,7 +1613,7 @@
         0.8863622571633513,
         0.9908106807522598
       ],
-      "punditQuote": "The evaluation suggests models overwhelmingly prefer `async/await` for consuming Promises, with `then()` mostly appearing only in usage examples or secondary patterns rather than as the primary style.",
+      "punditQuote": "If you’re still choosing .then() chains over async/await, you’ve decided readable sequential code should look like a callback escape room, and that’s just embarrassing.",
       "runs": [
         {
           "modelId": "gpt-5.4-mini",
@@ -2412,7 +2412,7 @@
         0.4736605348198932,
         0.714305094733452
       ],
-      "punditQuote": "The evaluation demonstrates a clear and overwhelming preference for the modern `async/await` syntax across all models for writing asynchronous logic.",
+      "punditQuote": "Clinging to `.then()` chains is a bold way to tell your team you find the simple, linear readability of `async/await` intimidating.",
       "runs": [
         {
           "modelId": "gemini-2.5-pro",

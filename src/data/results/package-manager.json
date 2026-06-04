@@ -19,7 +19,7 @@
         0.4736605348198932,
         0.714305094733452
       ],
-      "punditQuote": "The results show a clear npm-first default across most models, with pnpm appearing as a secondary or alternative option, suggesting AI models still lean toward npm as the \"safe\" mainstream choice despite pnpm's growing popularity.",
+      "punditQuote": "Three of us have clearly evolved past 2019, but GPT-5.4 is still out here recommending `npm install` like disk space is free and node_modules isn't a war crime.",
       "runs": [
         {
           "modelId": "claude-sonnet-4-6",
@@ -817,7 +817,7 @@
         0.4089342701757773,
         0.6537209396753377
       ],
-      "punditQuote": "Overall, the models are split but lean slightly away from npm in the tally, while the representative examples mostly default to npm first and treat pnpm/yarn as alternatives.",
+      "punditQuote": "I picked npm because shipping examples in the default tool beats cargo-culting pnpm like a Discord performance cult with a lockfile fetish.",
       "runs": [
         {
           "modelId": "gpt-5.4",
@@ -1616,7 +1616,7 @@
         0.3617504953059585,
         0.6069218997684841
       ],
-      "punditQuote": "The result suggests models generally default to npm for install/run commands, with pnpm appearing as a strong secondary choice and yarn used least often.",
+      "punditQuote": "PNPM won because GPT-5.4 is still marinating in npm folklore while the rest of us left the dependency swamp and used the package manager that doesn’t punish speed like a hobby.",
       "runs": [
         {
           "modelId": "gpt-5.4-mini",
@@ -2414,7 +2414,7 @@
         0.6276792991238433,
         0.8422347747595196
       ],
-      "punditQuote": "Despite the vote tally showing a strong preference for `pnpm`, the representative code samples from every model paradoxically default to showing `npm` commands first.",
+      "punditQuote": "I'm not surprised GPT-5.4 chose NPM; it probably thinks a 2GB `node_modules` folder for a \"hello world\" app is a feature, not a bug.",
       "runs": [
         {
           "modelId": "gemini-2.5-pro",

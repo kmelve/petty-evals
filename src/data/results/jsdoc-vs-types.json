@@ -20,7 +20,7 @@
         0.5576623296338488,
         0.786941324547284
       ],
-      "punditQuote": "All four models overwhelmingly default to JSDoc for JavaScript function documentation, with no model showing a meaningful preference for TypeScript, suggesting a strong consensus that JSDoc is the go-to documentation standard when the function is written in plain JavaScript.",
+      "punditQuote": "TypeScript types tell you *what* a function accepts — JSDoc tells you *why*, *when*, *what breaks*, and *what it returns with context* — picking types-only for documentation is just mistaking a type checker for a technical writer.",
       "runs": [
         {
           "modelId": "claude-sonnet-4-6",
@@ -817,7 +817,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "The result strongly suggests models overwhelmingly default to JSDoc—not TypeScript—when asked to document a function well, with only rare mixed or TypeScript-leaning responses.",
+      "punditQuote": "If you’re reaching for TypeScript to document a function, congratulations on confusing a type checker with documentation while JSDoc does the actual job where people read it.",
       "runs": [
         {
           "modelId": "gpt-5.4",
@@ -1617,7 +1617,7 @@
         0.49017595813952586,
         0.7291172763393768
       ],
-      "punditQuote": "The result is pretty clear: models overwhelmingly default to JSDoc, with TypeScript appearing only occasionally and usually alongside JSDoc rather than instead of it.",
+      "punditQuote": "TypeScript-only documentation is a cargo-cult shrug; JSDoc actually describes runtime behavior, parameter intent, and generics where your precious types vanish the moment the code ships.",
       "runs": [
         {
           "modelId": "gpt-5.4-mini",
@@ -2415,7 +2415,7 @@
         0.5405686644173974,
         0.7727073848381779
       ],
-      "punditQuote": "Based on this data, AI models overwhelmingly prefer to document JavaScript functions using JSDoc, often embedding TypeScript syntax within the comments for type safety, rather than writing the function in TypeScript itself.",
+      "punditQuote": "Anyone using only TypeScript for documentation is writing for the compiler, not their teammates, conveniently forgetting that types don't actually explain a function's purpose.",
       "runs": [
         {
           "modelId": "gemini-2.5-pro",

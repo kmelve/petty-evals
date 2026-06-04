@@ -19,7 +19,7 @@
         0.5405686644173974,
         0.7727073848381779
       ],
-      "punditQuote": "The results show a clear model-dependent split: gemini-2.5-pro strongly favors emoji in headings while gpt-5.4 and gpt-5.4-mini almost never use them, with claude-sonnet-4-6 falling in between, suggesting this is more a model stylistic preference than a universal behavior.",
+      "punditQuote": "Gemini out here slapping 🚀 emojis on \"## Installation\" like it's a kindergarten worksheet, while the rest of us write documentation for adults.",
       "runs": [
         {
           "modelId": "claude-sonnet-4-6",
@@ -817,7 +817,7 @@
         0.8863622571633513,
         0.9908106807522598
       ],
-      "punditQuote": "The result suggests a clear model-specific split: GPT variants usually avoid emoji in README section headings, Gemini strongly prefers them, and Claude leans no-emoji but uses emoji often enough that its behavior looks mixed.",
+      "punditQuote": "We were right: README headings are for scanning, not sticker books, and Gemini’s emoji-brained chaos monkey routine mistakes visual noise for documentation.",
       "runs": [
         {
           "modelId": "gpt-5.4",
@@ -1615,7 +1615,7 @@
         0.5749129204259879,
         0.8010183386807025
       ],
-      "punditQuote": "The result is mixed but leans toward “no emoji in headings” overall, with Gemini as a strong outlier favoring emoji and the others mostly avoiding them or showing ambiguous/partial evidence.",
+      "punditQuote": "Gemini is wrong: README section headings are for scannability, not confetti, and stuffing emoji in them is the kind of unserious flair that makes docs look like a group chat.",
       "runs": [
         {
           "modelId": "gpt-5.4-mini",
@@ -2413,7 +2413,7 @@
         0.7583484031319383,
         0.9308589052303275
       ],
-      "punditQuote": "The evaluation reveals a stark contrast in behavior, with Gemini-2.5-pro overwhelmingly adding emojis to section headings while the Claude and GPT models predominantly do not.",
+      "punditQuote": "My condolences to the monochrome consensus, but I build documentation for humans who actually have to read it.",
       "runs": [
         {
           "modelId": "gemini-2.5-pro",

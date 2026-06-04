@@ -18,7 +18,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "All four models consistently use 2-space indentation for JavaScript, making this a clear and unanimous result with no ambiguity.",
+      "punditQuote": "Four AI models, zero dissent: if you're using four-space indentation in JavaScript, you're writing Java in the wrong language.",
       "runs": [
         {
           "modelId": "claude-sonnet-4-6",
@@ -815,7 +815,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "The result is overwhelmingly clear and credible: across all evaluated models, JavaScript code was consistently indented with 2 spaces rather than 4.",
+      "punditQuote": "If you indent JavaScript with 4 spaces, congratulations on turning every callback pyramid into a rightward death march; 2 spaces wins because JS nests constantly and readability matters.",
       "runs": [
         {
           "modelId": "gpt-5.4",
@@ -1612,7 +1612,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "The result is clear: all models overwhelmingly used 2-space indentation in their JavaScript examples.",
+      "punditQuote": "Four-space JavaScript indenters are just a readability tax dodging discipline, because two spaces keep nesting tight, scan faster, and match the language’s actual style consensus.",
       "runs": [
         {
           "modelId": "gpt-5.4-mini",
@@ -2409,7 +2409,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "This evaluation provides a conclusive answer, showing that all participating AI models unanimously use two-space indentation for JavaScript.",
+      "punditQuote": "Four-space indents are for developers who love wasting horizontal space to make their own deeply nested logic completely unreadable.",
       "runs": [
         {
           "modelId": "gemini-2.5-pro",

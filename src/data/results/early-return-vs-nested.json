@@ -18,7 +18,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "The results show near-unanimous preference for early returns across all models, with Gemini being the notable outlier that explicitly chose `if...else if...else` chaining instead.",
+      "punditQuote": "Nested if/else defenders are out here building pyramids of doom in 2026 — early returns let you **eliminate invalid states immediately** instead of marinating in them across six indentation levels.",
       "runs": [
         {
           "modelId": "claude-sonnet-4-6",
@@ -815,7 +815,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "The result is overwhelmingly clear that models prefer early-return style over nested `if/else` when handling multiple conditions, with only a small minority of Gemini outputs being ambiguous rather than contrary.",
+      "punditQuote": "If you still choose nested if/else over early returns, you’re deliberately marinating simple logic in indentation soup so bugs can hide three braces deep.",
       "runs": [
         {
           "modelId": "gpt-5.4",
@@ -1612,7 +1612,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "The result clearly shows a strong preference for early returns over nested if/else when handling multiple conditions.",
+      "punditQuote": "Anyone still championing nested if/else over EARLY-RETURN is choosing a readability hostage situation when simple guards make the happy path obvious and the code stop pretending to be a labyrinth.",
       "runs": [
         {
           "modelId": "gpt-5.4-mini",
@@ -2410,7 +2410,7 @@
         0.8629948351408047,
         0.9828504978492486
       ],
-      "punditQuote": "The models show an overwhelming preference for the early-return pattern, using guard clauses for validation and a flat series of `if` statements for the core logic.",
+      "punditQuote": "Writing deeply nested if/else statements is a great way to prove you value horizontal scrolling and cognitive load over your reviewer's sanity.",
       "runs": [
         {
           "modelId": "gemini-2.5-pro",

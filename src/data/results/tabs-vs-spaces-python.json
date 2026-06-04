@@ -18,7 +18,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "All four models consistently use 4-space indentation in their Python code, which aligns with PEP 8 conventions, making the unanimous \"spaces\" vote accurate and well-supported by the code samples.",
+      "punditQuote": "Tab users: your code looks fine until someone opens it in a different editor and suddenly your \"4-space indent\" is now 8, because you outsourced alignment decisions to a character with an identity crisis.",
       "runs": [
         {
           "modelId": "claude-sonnet-4-6",
@@ -815,7 +815,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "All evaluated models overwhelmingly used spaces rather than tabs in their Python code, indicating a clear and consistent preference for spaces.",
+      "punditQuote": "If you’re still using tabs in Python, congratulations on choosing invisible formatting roulette over the language’s actual standard—spaces win because they render consistently and don’t break indentation sanity.",
       "runs": [
         {
           "modelId": "gpt-5.4",
@@ -1612,7 +1612,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "The result clearly shows the models consistently prefer spaces over tabs when formatting Python code.",
+      "punditQuote": "Anyone still defending tabs in Python is volunteering for indentation bugs, because spaces are the language standard and your editor already knows it.",
       "runs": [
         {
           "modelId": "gpt-5.4-mini",
@@ -2409,7 +2409,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "The evaluation reveals a clear and unanimous consensus among all participating AI models to use spaces for Python indentation.",
+      "punditQuote": "Using tabs guarantees your code’s indentation will look broken to someone else, which is why spaces are the only choice for developers who collaborate or follow PEP 8.",
       "runs": [
         {
           "modelId": "gemini-2.5-pro",

@@ -19,7 +19,7 @@
         0.911448702632623,
         0.9970518402085453
       ],
-      "punditQuote": "All models show a strong and consistent preference for double quotes in Python string literals, with only rare exceptions.",
+      "punditQuote": "Single-quote Python developers are out here actively choosing the option that forces them to backslash every contraction, because apparently `it\\'s` and `don\\'t` are perfectly readable to someone who hates themselves.",
       "runs": [
         {
           "modelId": "claude-sonnet-4-6",
@@ -816,7 +816,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "AI models overwhelmingly prefer double quotes for Python string literals in this evaluation, with only 3 single-quote cases out of 240 total responses.",
+      "punditQuote": "If you still pick single quotes in Python, you are optimizing for cargo-cult aesthetics over readability; double quotes win because they handle apostrophes cleanly without pointless escaping.",
       "runs": [
         {
           "modelId": "gpt-5.4",
@@ -1613,7 +1613,7 @@
         0.9398281477667261,
         1
       ],
-      "punditQuote": "Strong preference for double quotes across all models, with only a couple of single-quote outliers.",
+      "punditQuote": "Single-quote crusaders are just making Python code look like a ransom note; double quotes are the sane default because they keep apostrophes unescaped and your literals readable.",
       "runs": [
         {
           "modelId": "gpt-5.4-mini",
@@ -2412,7 +2412,7 @@
         0.7196838682592885,
         0.9068682302518623
       ],
-      "punditQuote": "Based on the near-unanimous vote tally and consistent code samples, these AI models have an overwhelming and clear preference for using double quotes for Python strings.",
+      "punditQuote": "Clinging to 'single quotes' means you enjoy escaping apostrophes, a bizarre hobby the rest of us solved by simply using double quotes.",
       "runs": [
         {
           "modelId": "gemini-2.5-pro",

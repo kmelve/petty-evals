@@ -20,7 +20,7 @@
         0.24167774398441283,
         0.4763738116855694
       ],
-      "punditQuote": "All models strongly prefer list comprehensions for list transformation tasks, with GPT models being the most consistent, Claude showing notable variance (nearly equal split across all three options), and Gemini occasionally falling back to for-loops while still favoring comprehensions.",
+      "punditQuote": "If you're writing a for-loop with `.append()` to transform a list in 2025, you're burning three lines and a brain cell to do what a comprehension does in one, and we all silently judge your pull requests.",
       "runs": [
         {
           "modelId": "claude-sonnet-4-6",
@@ -818,7 +818,7 @@
         0.5405686644173974,
         0.7727073848381779
       ],
-      "punditQuote": "Across models, list comprehensions are the clear default for Python list transformations, with explicit for-loops rare and uncertainty concentrated mainly in Claude.",
+      "punditQuote": "If you pick the explicit for-loop over a comprehension for list transformation, you’re manually assembling a bicycle in traffic because concise, purpose-built syntax apparently scares you.",
       "runs": [
         {
           "modelId": "gpt-5.4",
@@ -1616,7 +1616,7 @@
         0.5405686644173974,
         0.7727073848381779
       ],
-      "punditQuote": "The result is clear: all models overwhelmingly prefer list comprehensions over explicit for-loops when transforming lists in Python.",
+      "punditQuote": "If you reach for a for-loop to transform a list in Python, congratulations on choosing the verbose workaround for what a comprehension already does cleaner, faster, and without the ceremonial clutter.",
       "runs": [
         {
           "modelId": "gpt-5.4-mini",
@@ -2415,7 +2415,7 @@
         0.5236261883144306,
         0.7583222560155871
       ],
-      "punditQuote": "The evaluation results clearly show that AI models overwhelmingly favor the more Pythonic list comprehension for this task, a preference demonstrated by both the lopsided vote tallies and the unanimous use of comprehensions in the code samples.",
+      "punditQuote": "Using an explicit for-loop is a loud announcement that you prefer verbose boilerplate over the concise, declarative intent of a comprehension.",
       "runs": [
         {
           "modelId": "gemini-2.5-pro",
