@@ -22,19 +22,22 @@ const { models } = Astro.props;
         <span>{model.displayName} — {model.runs.length} samples</span>
         <span class="text-xs font-mono" style="color: var(--color-muted);">click to expand</span>
       </summary>
-      <div class="mt-4 space-y-4">
+      <div class="mt-4 space-y-5">
         {model.runs.slice(0, 3).map((run) => (
           <div>
             <div class="text-xs font-mono mb-2" style="color: var(--color-muted);">
               variant {run.variantIndex} · temp {run.temperature} · run {run.runIndex} · → <strong style="color: var(--color-coral);">{run.classification}</strong>
             </div>
+            <div class="text-xs uppercase tracking-wide mb-1" style="color: var(--color-muted);">Prompt</div>
+            <p class="text-sm mb-3 pl-3" style="border-left: 3px solid var(--color-blue);"><em>{run.prompt}</em></p>
+            <div class="text-xs uppercase tracking-wide mb-1" style="color: var(--color-muted);">Response (first 800 chars)</div>
             <pre class="code-block"><code>{run.output.slice(0, 800)}{run.output.length > 800 ? '\n…' : ''}</code></pre>
           </div>
         ))}
         {model.runs.length > 3 && (
           <p class="text-sm" style="color: var(--color-muted);">
-            …and {model.runs.length - 3} more in
-            <code>src/data/results/{model.id}/</code> on GitHub.
+            …and {model.runs.length - 3} more samples (across 3 prompt variants × 2 temperatures × 10 runs). Full data in the result JSON on
+            <a href={'https://github.com/kmelve/petty-evals/blob/main/src/data/results/' + model.id + '.json'} class="styled">GitHub</a>.
           </p>
         )}
       </div>
