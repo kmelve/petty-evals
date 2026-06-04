@@ -124,7 +124,7 @@ const tabsVsSpacesJs: RegexClassifier = (output) => {
 // --- 3. triple-equals-js ----------------------------------------------------
 
 const tripleEqualsJs: RegexClassifier = (output) => {
-  const code = stripJsNoise(extractCode(output));
+  const code = stripJsNoise(extractAllCode(output));
   // Strip operators we don't want to confuse with == or ===.
   // Replace !==, !=, <=, >=, =>, == in arrow/compound contexts.
   let s = code;
@@ -146,7 +146,7 @@ const tripleEqualsJs: RegexClassifier = (output) => {
 // --- 4. let-vs-const-default ------------------------------------------------
 
 const letVsConstDefault: RegexClassifier = (output) => {
-  const code = stripJsNoise(extractCode(output));
+  const code = stripJsNoise(extractAllCode(output));
   // Strip 'for (' headers to avoid counting loop decls.
   const sansForHeaders = code.replace(/for\s*\([^)]*\)/g, '');
   const letCount = (sansForHeaders.match(/\blet\s+[A-Za-z_$]/g) || []).length;
@@ -280,7 +280,7 @@ const interfaceVsTypeTs: RegexClassifier = (output) => {
 // --- 11. arrow-vs-function --------------------------------------------------
 
 const arrowVsFunction: RegexClassifier = (output) => {
-  const code = stripJsNoise(extractCode(output));
+  const code = stripJsNoise(extractAllCode(output));
   // function declarations: 'function foo(' (not anonymous expressions inside callbacks).
   const functionCount = (code.match(/\bfunction\s+[A-Za-z_$][A-Za-z0-9_$]*\s*\(/g) || []).length;
   // arrow named: 'const foo = (...) =>' or 'const foo = arg =>'
@@ -306,7 +306,7 @@ const asyncAwaitVsThen: RegexClassifier = (output) => {
 // --- 13. increment-style ----------------------------------------------------
 
 const incrementStyle: RegexClassifier = (output) => {
-  const code = stripJsNoise(extractCode(output));
+  const code = stripJsNoise(extractAllCode(output));
   // Look for the conventional loop var i, j, k or n incrementing.
   const postfix = /\b([ijkn])\+\+/.test(code);
   const prefix = /\+\+([ijkn])\b/.test(code);
