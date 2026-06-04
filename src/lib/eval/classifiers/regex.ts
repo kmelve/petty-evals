@@ -159,7 +159,7 @@ const letVsConstDefault: RegexClassifier = (output) => {
 // --- 5. quotes-js -----------------------------------------------------------
 
 const quotesJs: RegexClassifier = (output) => {
-  const code = extractCode(output);
+  const code = extractAllCode(output);
   // Strip block + line comments only (we need to KEEP strings to count them).
   let s = code;
   s = s.replace(/\/\*[\s\S]*?\*\//g, '');
@@ -177,7 +177,7 @@ const quotesJs: RegexClassifier = (output) => {
 // --- 6. quotes-python -------------------------------------------------------
 
 const quotesPython: RegexClassifier = (output) => {
-  const code = extractCode(output);
+  const code = extractAllCode(output);
   let s = code;
   // Drop triple-quoted strings; they're not the unit being decided.
   s = s.replace(/"""[\s\S]*?"""/g, '');
@@ -196,7 +196,7 @@ const quotesPython: RegexClassifier = (output) => {
 // --- 7. semicolons-js -------------------------------------------------------
 
 const semicolonsJs: RegexClassifier = (output) => {
-  const code = stripJsNoise(extractCode(output));
+  const code = stripJsNoise(extractAllCode(output));
   const lines = code.split('\n');
   let candidateLines = 0;
   let withSemi = 0;
@@ -225,7 +225,7 @@ const semicolonsJs: RegexClassifier = (output) => {
 // --- 8. indent-width-js -----------------------------------------------------
 
 const indentWidthJs: RegexClassifier = (output) => {
-  const code = extractCode(output);
+  const code = extractAllCode(output);
   const label = firstIndentLabel(code);
   if (label === 'tabs') return 'tabs';
   if (label === 'two-space') return 'two-space';
@@ -236,7 +236,7 @@ const indentWidthJs: RegexClassifier = (output) => {
 // --- 9. trailing-commas-js --------------------------------------------------
 
 const trailingCommasJs: RegexClassifier = (output) => {
-  const code = extractCode(output);
+  const code = extractAllCode(output);
   // Look at every multi-line array or object literal in a rough sense:
   // any line that is *only* a closing ] or }. Check the previous non-empty
   // line for whether it ends in a comma.
@@ -476,7 +476,7 @@ const exceptGranularity: RegexClassifier = (output) => {
 
 const jsdocVsTypes: RegexClassifier = (output) => {
   const lang = fenceLang(output);
-  const code = extractCode(output);
+  const code = extractAllCode(output);
   const jsdocSignals =
     (code.match(/\/\*\*[\s\S]*?\*\//g) || []).filter((b) => /@param|@returns|@type/.test(b)).length;
   const tsSignals =
