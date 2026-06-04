@@ -40,8 +40,6 @@ const pages: Record<string, PageMeta> = Object.fromEntries(
 const CREAM: [number, number, number] = [255, 248, 231];
 const INK: [number, number, number] = [26, 26, 26];
 const CORAL: [number, number, number] = [255, 92, 92];
-const MUTED: [number, number, number] = [110, 110, 110];
-
 export const { getStaticPaths, GET } = await OGImageRoute<PageMeta>({
   param: 'slug',
   pages,
