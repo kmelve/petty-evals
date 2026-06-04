@@ -118,22 +118,29 @@ const totalVoters = result ? tallyTotal(result.verdict.tally) : 0;
         <summary>How I did this (the actual nerd shit)</summary>
         <div class="pb-8 prose">
           <p>
-            For each of the {result.models.length} models, I ran <strong>{fight.data.promptVariants.length} different prompts</strong>,
-            each at <strong>two temperatures</strong> (0.0 and 0.7),
-            repeated <strong>10 times</strong>. That's {result.totalRuns} code samples total.
-            Total cost: <strong>${result.totalCostUsd.toFixed(2)}</strong>.
+            For each of {result.models.length} models I ran <strong>{fight.data.promptVariants.length} prompt variants</strong>
+            at <strong>two temperatures</strong> (0.0 and 0.7), <strong>10 runs each</strong> —
+            {result.totalRuns} code samples total, cost <strong>${result.totalCostUsd.toFixed(2)}</strong>.
           </p>
           <p>
-            Each output got classified by a regex (does the first indented line start with a tab
-            or with spaces?). When the regex was ambiguous, an LLM judge broke the tie.
+            Each output got fed through a <a href={'https://github.com/kmelve/petty-evals/blob/main/src/lib/eval/classifiers/regex.ts'}>fight-specific regex classifier</a>.
+            For <code>{fight.id}</code> the classifier looks for the specific signal in the output
+            (see the source — there's one function per fight, ~30 lines each).
+            When the signal is ambiguous, the classifier returns <code>'unknown'</code> rather than guess.
           </p>
           <p>
-            Confidence intervals are Wilson 95%. The "Disagreement Index" is normalized
-            Shannon entropy across the model votes — 0 means unanimous, 1 means maximum chaos.
+            Each model's <strong>vote</strong> = its modal classification across 60 runs.
+            <strong>Confidence</strong> = Wilson 95% CI.
+            <strong>Verdict</strong> = majority across models (ties reported as ties).
+            <strong>Disagreement Index</strong> = normalized Shannon entropy of the vote distribution
+            (0 = unanimous, 1 = maximum chaos). Leaderboard sorts by this.
           </p>
           <p>
-            The full methodology lives on <a href="/methodology">the nerd shit page</a>.
-            Source is on <a href="https://github.com/kmelve/petty-evals">GitHub</a>.
+            The pundit quotes come from a follow-up call after the votes are in — each model gets
+            the full tally and a per-model judgy prompt. I never edit the quotes.
+          </p>
+          <p>
+            Full walkthrough: <a href="/methodology">the methodology page</a>. Source: <a href="https://github.com/kmelve/petty-evals">GitHub</a>.
           </p>
         </div>
       </details>

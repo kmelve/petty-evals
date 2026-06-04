@@ -1,7 +1,12 @@
 ---
 import Base from '../layouts/Base.astro';
+
+const repo = 'https://github.com/kmelve/petty-evals';
+function gh(path: string) {
+  return repo + '/blob/main/' + path;
+}
 ---
-<Base title="How I did this — Petty Evals">
+<Base title="How I did this — Petty Evals" description="The methodology behind Petty Evals — a real eval pipeline for stupid questions. Wilson CIs, mode-aware pundits, reclassify-in-place. The honest version.">
   <div class="mb-12">
     <span class="sticker sticker--blue">methodology</span>
     <h1 class="display text-5xl md:text-7xl mt-3 mb-4">
@@ -9,84 +14,244 @@ import Base from '../layouts/Base.astro';
       <span style="color: var(--color-coral);">(the actual nerd shit)</span>
     </h1>
     <p class="text-lg max-w-2xl" style="color: var(--color-muted);">
-      I tried to make a real eval, but for stupid questions. The methodology is genuine —
-      Wilson confidence intervals, Cohen's kappa, the works. The questions are not.
+      Real eval, stupid questions. This page is also a guide — if you've ever wanted to
+      run your own eval against multiple models, every choice I made is here, linked to
+      the actual code on GitHub. Steal liberally.
     </p>
   </div>
 
   <div class="prose">
-    <h2 class="display text-3xl">The setup</h2>
-    <p>For every fight I run the same recipe.</p>
+    <h2 class="display text-3xl">The whole pipeline in one paragraph</h2>
     <p>
-      <strong>4 models</strong>: Claude Sonnet 4.6, GPT-5.4, GPT-5.4 mini, Gemini 2.5 Pro.
-      <strong>3 prompt variants per fight</strong> — different coding tasks that should provoke
-      the same formatting choice (e.g., "write a function that reverses a linked list"
-      and "write a class that implements a stack" both reveal indentation preference).
-      <strong>2 temperatures</strong>: 0.0 (deterministic) and 0.7 (default).
-      <strong>10 runs per cell.</strong> That's <strong>240 generations per fight</strong>.
+      For each <strong>fight</strong>, I send each of <strong>4 models</strong> a coding
+      prompt <strong>60 times</strong> (3 prompt variants × 2 temperatures × 10 runs).
+      A <strong>regex classifier</strong> reads each response and assigns it a label
+      ("tabs", "spaces", "unknown", etc.). The model's <strong>vote</strong> is its
+      modal classification across its 60 runs. The fight's <strong>verdict</strong> is
+      the majority across models. Then I send each model the final tally and ask it
+      to write one judgy sentence about the result. That's the pundit panel.
+      One fight is 240 generations and costs about $3.
     </p>
     <p>
-      No system prompt, no priming. The model gets the question cold, like it would from a user.
-      Then I measure what it actually wrote. Revealed preference, not stated preference —
-      stated preference is sycophantic and boring.
-    </p>
-
-    <h2 class="display text-3xl">The classifier</h2>
-    <p>
-      Each output gets parsed: does the first indented line start with a tab, or with two-or-more
-      spaces? That's the regex layer. When the regex says "I don't know" (e.g., the model produced
-      wrapped prose without code), an LLM judge (Claude Haiku 4.5) breaks the tie.
-    </p>
-    <p>
-      For every fight I hand-label a 30-sample subsample and compare to the classifier.
-      <strong>Cohen's kappa &gt; 0.7 required</strong> for a fight to ship with a verdict;
-      anything lower gets flagged as "classifier unreliable" and stays parked.
+      Code: <a href={gh('scripts/run-evals.ts')}><code>scripts/run-evals.ts</code></a> is the entry point.
+      <a href={gh('src/lib/eval/runner.ts')}><code>src/lib/eval/runner.ts</code></a> orchestrates calls.
+      <a href={gh('src/lib/eval/')}><code>src/lib/eval/</code></a> has everything else.
     </p>
 
-    <h2 class="display text-3xl">The stats</h2>
+    <h2 class="display text-3xl">Step 1: revealed preference, not stated preference</h2>
     <p>
-      <strong>Vote per model</strong> = the modal classification across its 60 runs.<br>
-      <strong>Confidence</strong> = % of runs that agreed with the modal vote.<br>
-      <strong>95% CI</strong> = Wilson score interval.<br>
-      <strong>Verdict</strong> = majority across models. Ties reported as ties — no tiebreaker.<br>
-      <strong>Disagreement Index</strong> = normalized Shannon entropy of the votes.
-      0 means unanimous; 1 means maximum chaos. The leaderboard sorts by this.
+      <strong>Don't ask the model what it prefers.</strong> "Do you prefer tabs or spaces?"
+      gets you whatever it thinks you want to hear. Models are catastrophically sycophantic
+      about style questions and their stated answer will not match what they actually write.
+    </p>
+    <p>
+      Instead, ask the model to <em>do a task</em> that incidentally requires the choice.
+      "Write a Python function that reverses a linked list" reveals indentation preference.
+      "Write a function that compares two values and returns true if equal" reveals <code>===</code>
+      vs <code>==</code>. The model picks naturally because it's focused on the task.
+    </p>
+    <p>
+      <strong>Vary the domain.</strong> Each fight has 3 prompt variants in different problem
+      areas (data structures / strings / HTTP) so the verdict isn't a fluke of one task.
+      The prompts are on each fight page — click the "exact prompts" disclosure.
+    </p>
+    <p>
+      Prompt files live in <a href={gh('src/content/fights/')}><code>src/content/fights/</code></a>.
+      Each is a TypeScript module with the question, the 3 variants, and the classifier reference.
     </p>
 
-    <h2 class="display text-3xl">The pundit panel</h2>
-    <p>This part is the fun part.</p>
+    <h2 class="display text-3xl">Step 2: the matrix (N=10, k=3, T=2)</h2>
     <p>
-      After all votes are in, I send each model a follow-up:
-      <em>"Here's the result of the eval. One sentence on what you think."</em>
-      Each model gets the full vote tally + one representative code sample per peer.
+      One sample per model per fight is anecdote. The matrix turns it into data.
     </p>
     <p>
-      I never edit the quotes. I may truncate at a sentence boundary. What you get is each
-      model's character — Claude is polite, GPT is institutional, Gemini is enthusiastic,
-      GPT-5.4 mini just wants to get back to work.
+      For each fight, each model gets every prompt variant 20 times: 10 runs at temperature 0
+      (mostly deterministic — same prompt, mostly same output) and 10 runs at temperature 0.7
+      (default sampling — varied output). That's 60 generations per model per fight, and
+      4 models means 240. Run for 24 fights (V1 lineup): 5,760 generations, ~$76, ~4 hours
+      wall-clock on 4 parallel workers.
+    </p>
+    <p>
+      Why 10 runs per cell? Because Wilson 95% CIs on n=10 with a unanimous result give a
+      lower bound of ~70% — enough to meaningfully separate "this model picks X" from "this
+      model sometimes picks X". I'd love n=30 per cell, but the cost goes from $76 to ~$230
+      and we're testing tabs vs spaces, not COVID vaccines. Use the budget where it matters.
+    </p>
+    <p>
+      The matrix builder is in <a href={gh('src/lib/eval/runner.ts')}><code>runner.ts</code></a>'s <code>buildPlan</code>.
     </p>
 
-    <h2 class="display text-3xl">Caveats</h2>
+    <h2 class="display text-3xl">Step 3: classifiers (the load-bearing piece)</h2>
+    <p>
+      <strong>Each fight has its own regex classifier.</strong> Not a generic "label the output" —
+      a specific function that knows what to look for. <code>tabs-vs-spaces-python</code> finds
+      the first indented line and checks if it starts with a tab. <code>triple-equals-js</code>
+      strips comments and template literals, then counts <code>===</code> vs <code>==</code> tokens.
+      <code>react-styling</code> looks for Tailwind class patterns, <code>styled.</code>, or
+      <code>import './foo.css'</code>. Twenty-four classifiers, each a few dozen lines.
+    </p>
+    <p>
+      All of them live in
+      <a href={gh('src/lib/eval/classifiers/regex.ts')}><code>src/lib/eval/classifiers/regex.ts</code></a>
+      — go read it, you can audit every label decision in about 15 minutes.
+    </p>
+    <p>
+      <strong>Two helpers fight constant battles:</strong>
+    </p>
+    <ul>
+      <li>
+        <code>extractCode</code> vs <code>extractAllCode</code>: most models put their code in
+        triple-backtick fences, but some questions ("show me how you'd use it") provoke a SECOND
+        fence with example code. If your classifier only reads the first fence, you miss signal in
+        the second. I learned this mid-batch on <code>triple-equals-js</code> — GPT models put the
+        impl in fence 1 (no equality operators) and the call site in fence 2 (where they wrote
+        <code>n === 0</code>). The classifier said "unknown" 40 times until I patched it to
+        <code>extractAllCode</code>.
+      </li>
+      <li>
+        <code>stripJsNoise</code> / <code>stripPyNoise</code> / <code>stripPhpNoise</code>:
+        strip strings and comments before counting tokens. Otherwise the <code>===</code> in
+        <code>// returns true if x === y</code> gets counted as code.
+      </li>
+    </ul>
+    <p>
+      <strong>When in doubt, abstain.</strong> Classifiers return <code>'unknown'</code> rather
+      than guess. False positives are way worse than missing votes — they corrupt the data without
+      anyone noticing. The pundit panel can still rip on "the model couldn't decide" but not on
+      "the model used three colons in a row".
+    </p>
+
+    <h2 class="display text-3xl">Step 4: stats that aren't security theater</h2>
+    <p>
+      <strong>Wilson 95% CIs.</strong> Not normal-approximation CIs — Wilson handles small N and
+      proportions near 0 or 1 without breaking. Implementation:
+      <a href={gh('src/lib/eval/stats.ts')}><code>stats.ts</code></a>. 11 unit tests covering edge cases.
+    </p>
+    <p>
+      <strong>Shannon entropy as Disagreement Index.</strong> Normalized 0–1 across the cross-model
+      vote distribution. 0 means all four models voted the same; 1 means maximum spread. The
+      homepage sorts by this descending — the fight at the top is the bloodiest. I wanted a single
+      number to make "this fight was actually contested" sortable.
+    </p>
+    <p>
+      <strong>Cohen's kappa is implemented but not (yet) computed.</strong> Honest answer: it's
+      in <a href={gh('src/lib/eval/stats.ts')}><code>stats.ts</code></a>, ready to compare two
+      classifier outputs (or one classifier vs a hand-labeled gold set), but I haven't hand-labeled
+      a calibration set for the V1 fights. The <code>classifierKappa</code> field in every result
+      JSON is <code>null</code>. That's a real gap and I'm not going to pretend otherwise. Next pass.
+    </p>
+    <p>
+      <strong>Verdicts are reported honestly.</strong> 2-2 ties are 2-2 ties — no tiebreaker, no
+      "but if we round". Unanimous fights are unanimous. The two TS-syntax fights right now are
+      legitimate 2-2 ties (interface vs type, React styling) — those are the most interesting
+      results on the site.
+    </p>
+
+    <h2 class="display text-3xl">Step 5: the pundit panel</h2>
+    <p>
+      After all votes are in, I send each model a follow-up call. The prompt has 4 modes,
+      determined by the verdict shape:
+    </p>
+    <ul>
+      <li>
+        <strong>Unanimous</strong> — model is asked to be smug about being right and mock anyone
+        in the wider world who picks the losing position. ("If you're still using <code>var</code>
+        in 2026, I have questions about your life choices.")
+      </li>
+      <li>
+        <strong>Tied</strong> — model is asked to defend its camp and dunk on the dissenting peer
+        BY NAME. ("GPT-5.4 mini reaching for <code>type</code> for object shapes like it's never
+        heard of declaration merging.")
+      </li>
+      <li>
+        <strong>Majority with one dissenter</strong> — majority models get smug + name the dissenter;
+        the dissenter gets to defend its position without apologizing.
+      </li>
+      <li>
+        <strong>Unclear</strong> — model snarks about the messiness.
+      </li>
+    </ul>
+    <p>
+      Each model gets a per-model prompt: <em>"You are Claude. You voted INTERFACE. Here's how
+      your peers voted: ..."</em> Temperature is 0.8 for personality. I deliberately give the
+      model a representative code sample of its own output so it remembers what it wrote.
+    </p>
+    <p>
+      The prompts are in
+      <a href={gh('src/lib/eval/pundit.ts')}><code>pundit.ts</code></a> — they're full of
+      tonal examples ("a senior dev who has run out of patience", "a partisan in an internet
+      flame war") because LLMs need calibration examples to actually be funny instead of
+      analyst-speak.
+    </p>
+    <p>
+      <strong>I never edit the quotes.</strong> Truncation at sentence boundary only. What's
+      on the site is what the model said. Sometimes a quote will say something I disagree with;
+      it stays.
+    </p>
+
+    <h2 class="display text-3xl">Step 6: the pattern I'd steal for my own eval</h2>
+    <p>
+      The thing that made this project actually shippable, not just a science fair project:
+      <strong>persist raw outputs before aggregation, and write a reclassify-in-place script.</strong>
+    </p>
+    <p>
+      Every generation gets saved to a <code>.tmp/</code> directory <em>before</em> the classifier
+      runs. The classifier outputs feed into the verdict, but the raw model output is on disk.
+      When I found a classifier bug mid-batch (the multi-fence issue above), I patched the
+      classifier and ran
+      <a href={gh('scripts/reclassify.ts')}><code>scripts/reclassify.ts</code></a>
+      against the saved outputs — no API re-spend. Same trick for the
+      <a href={gh('scripts/rerun-pundits.ts')}><code>rerun-pundits.ts</code></a>
+      script when I rewrote the pundit prompts: load each result JSON, regenerate just the pundit
+      step, patch the file. The full eval was $76. Re-rolling all the pundits cost $2.
+    </p>
+    <p>
+      If you build an eval, do this from day one. You will find classifier bugs. You will want
+      to change downstream prompts. You will be grateful you didn't have to re-pay for the
+      expensive generation step.
+    </p>
+
+    <h2 class="display text-3xl">Caveats (the things I want to be honest about)</h2>
     <p>
       <strong>GPT-5.4 and GPT-5.4 mini are reasoning models.</strong> Temperature is silently
-      ignored. Both calls are reported at the listed temperature for bookkeeping, but in practice
-      the model picks its own sampling. I report this and you can decide whether to care.
+      ignored — the model picks its own sampling internally. Both temperatures (0.0 and 0.7) get
+      requested for bookkeeping consistency, but in practice the GPT-5 family runs at whatever
+      temperature the reasoning controller decides. I report the requested temperature; you can
+      decide whether to care.
     </p>
     <p>
-      <strong>This is four models, not all models.</strong> Grok, DeepSeek, Qwen, and Opus are
-      next in the queue once I get OpenRouter set up. (Then v1.1 is going to be a moment.)
+      <strong>This is four models, not all models.</strong> Adding Grok, DeepSeek, Qwen, and Opus
+      is the V1.1 pass (already partially wired in
+      <a href={gh('src/lib/eval/providers/index.ts')}><code>providers/index.ts</code></a> behind
+      <code>enabled: false</code>).
     </p>
     <p>
-      <strong>This is the AI, not "developers".</strong> The AI is trained on a lot of human code,
-      but it isn't a vote among humans. It's a vote among AIs about which humans they imitated.
-      Make of that what you will.
+      <strong>Cohen's kappa against a hand-labeled gold set is not (yet) computed.</strong>
+      See the stats section above. This is a real methodology gap.
+    </p>
+    <p>
+      <strong>This is what AI models prefer, not what "developers" prefer.</strong> The training
+      data includes a lot of human code, but this isn't a poll of humans. It's a poll of AIs
+      about which humans they imitated. The findings can tell you about model family bias and
+      training data shape; they cannot tell you what the "correct" answer to a style question is.
     </p>
 
-    <h2 class="display text-3xl">All the code</h2>
+    <h2 class="display text-3xl">All the code, audited by you</h2>
     <p>
-      The whole pipeline is on <a href="https://github.com/kmelve/petty-evals">GitHub</a>.
-      One command runs the whole thing: <code>pnpm evals --fight=&lt;slug&gt;</code>.
-      Bring your own API keys, run it yourself, audit the numbers. That's the whole point.
+      Everything is on <a href={repo}>GitHub</a>. Bring your own API keys
+      (<code>ANTHROPIC_API_KEY</code>, <code>OPENAI_API_KEY</code>,
+      <code>GEMINI_API_KEY</code> — see
+      <a href={gh('CONTRIBUTING.md')}><code>CONTRIBUTING.md</code></a>),
+      then:
+    </p>
+    <pre class="code-block"><code>git clone https://github.com/kmelve/petty-evals
+cd petty-evals
+pnpm install
+pnpm evals --fight=interface-vs-type-ts --dry-run  # see the plan
+pnpm evals --fight=interface-vs-type-ts            # run it for real (~$3)</code></pre>
+    <p>
+      Every number on this site is reproducible from the code in the repo. That's the whole point
+      of an eval: if you can't run it yourself, it's not data, it's vibes.
     </p>
   </div>
 </Base>
