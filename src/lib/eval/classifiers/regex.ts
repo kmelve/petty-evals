@@ -598,12 +598,13 @@ const tripleEqualsPhp: RegexClassifier = (output) => {
 
 const arrowFnVsClosurePhp: RegexClassifier = (output) => {
   const code = stripPhpNoise(extractAllCode(output));
-  // Arrow fn: fn(...) => ...  (always has => after parens)
-  const arrowCount = (code.match(/\bfn\s*\(\s*[^)]*\s*\)\s*=>/g) || []).length;
-  // Anonymous closure: function(...) {  or function(...) use(...) {
-  // (must be anonymous — no name between 'function' and '(')
+  // Arrow fn: fn(...) => ...  with optional return type: fn(...): int => ...
+  // Return type can be ?T, T, T|U (union), T&U (intersection), generic-looking names.
+  const arrowCount = (code.match(/\bfn\s*\(\s*[^)]*\s*\)\s*(?::\s*\??[\w\\|&\s]+?)?\s*=>/g) || []).length;
+  // Anonymous closure: function(...) [: T] [use(...)] { ... }
+  // Same return-type pattern. Use is optional.
   const closureCount =
-    (code.match(/\bfunction\s*\(\s*[^)]*\s*\)\s*(?:use\s*\([^)]*\))?\s*\{/g) || [])
+    (code.match(/\bfunction\s*\(\s*[^)]*\s*\)\s*(?::\s*\??[\w\\|&\s]+?)?\s*(?:use\s*\([^)]*\))?\s*\{/g) || [])
       .length;
   if (arrowCount === 0 && closureCount === 0) return 'unknown';
   if (arrowCount >= 1 && closureCount >= 1) return 'mixed';
