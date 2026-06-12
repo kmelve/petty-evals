@@ -7,7 +7,12 @@
 //  - SDK .d.ts files for current valid model ID strings
 
 import type { ModelConfig } from '../types.ts';
-import { anthropicClient, claudeSonnet46Pricing, claudeOpus48Pricing } from './anthropic.ts';
+import {
+  anthropicClient,
+  claudeSonnet46Pricing,
+  claudeOpus48Pricing,
+  claudeFable5Pricing,
+} from './anthropic.ts';
 import { openaiClient, gpt54Pricing, gpt54MiniPricing } from './openai.ts';
 import { googleClient, gemini25ProPricing, gemini3ProPricing } from './google.ts';
 import type { LanguageModel } from 'ai';
@@ -62,6 +67,18 @@ export const MODELS: ModelConfig[] = [
     provider: 'anthropic',
     modelId: 'claude-opus-4-8',
     pricing: claudeOpus48Pricing,
+    enabled: false,
+  },
+  // Fable 5 (Mythos-class). 1M context, ~2× Opus pricing
+  // ($10/M in, $50/M out). Disabled by default — enable only for a
+  // deliberate Big Eval run, since a full 28-fight benchmark at
+  // 240 calls/fight is ~6,720 calls per model.
+  {
+    id: 'claude-fable-5',
+    displayName: 'Claude Fable 5',
+    provider: 'anthropic',
+    modelId: 'claude-fable-5',
+    pricing: claudeFable5Pricing,
     enabled: false,
   },
   {
