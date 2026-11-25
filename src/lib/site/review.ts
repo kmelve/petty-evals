@@ -27,13 +27,13 @@ export function prStatus(mode: VerdictMode): PrStatus {
     case 'unanimous':
       return { label: 'Approved', tone: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20' };
     case 'lone-dissent':
-      return { label: 'Approved, 1 dissent', tone: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20' };
+      return { label: 'Approved (one holdout)', tone: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20' };
     case 'majority':
       return { label: 'Changes requested', tone: 'bg-amber-50 text-amber-800 ring-amber-600/25' };
     case 'tied':
-      return { label: 'Blocked', tone: 'bg-rose-50 text-rose-700 ring-rose-600/20' };
+      return { label: 'Merge conflict', tone: 'bg-rose-50 text-rose-700 ring-rose-600/20' };
     case 'unclear':
-      return { label: 'Needs triage', tone: 'bg-zinc-100 text-zinc-700 ring-zinc-500/20' };
+      return { label: "Can't reproduce", tone: 'bg-zinc-100 text-zinc-700 ring-zinc-500/20' };
   }
 }
 

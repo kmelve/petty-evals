@@ -24,10 +24,10 @@ const C = {
   rank: ['#10b981', '#fbbf24', '#f43f5e', '#a1a1aa'],
   pill: {
     Approved: ['#ecfdf5', '#047857'],
-    'Approved, 1 dissent': ['#ecfdf5', '#047857'],
+    'Approved (one holdout)': ['#ecfdf5', '#047857'],
     'Changes requested': ['#fffbeb', '#92400e'],
-    Blocked: ['#fff1f2', '#be123c'],
-    'Needs triage': ['#f4f4f5', '#3f3f46'],
+    'Merge conflict': ['#fff1f2', '#be123c'],
+    "Can't reproduce": ['#f4f4f5', '#3f3f46'],
   } as Record<string, [string, string]>,
 };
 
@@ -54,7 +54,7 @@ function header(right: Node | null): Node {
 }
 
 function pill(label: string): Node {
-  const [bg, fg] = C.pill[label] ?? C.pill['Needs triage'];
+  const [bg, fg] = C.pill[label] ?? C.pill["Can't reproduce"];
   return h('div', { background: bg, color: fg, borderRadius: 999, padding: '8px 20px', fontSize: 24, fontWeight: 600 }, label);
 }
 

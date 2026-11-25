@@ -28,7 +28,7 @@ const items: Item[] = fights
       category: f.data.category,
       totalRuns: r?.totalRuns ?? 0,
       disagreement: r?.verdict.disagreementIndex ?? 0,
-      summary: r ? summarize({ ...r, slug: f.id }) : null,
+      summary: r ? summarize({ ...r, slug: f.id, sides: f.data.sides }) : null,
     };
   })
   .sort((a, b) => b.disagreement - a.disagreement || a.title.localeCompare(b.title));
@@ -36,13 +36,11 @@ const items: Item[] = fights
 const withResults = items.filter((i) => i.summary);
 // Panel size and sample counts come from the data, so the copy stays true between re-runs.
 const panelSize = Math.max(0, ...withResults.map((i) => i.summary!.panelSize));
-const totalSamples = items.reduce((s, i) => s + i.totalRuns, 0);
 const contested = withResults.filter((i) => i.summary!.mode !== 'unanimous').length;
 const hottest = withResults.find((i) => i.summary!.featuredQuote);
 const panelWord = numberWord(panelSize);
-const PanelWord = panelWord.charAt(0).toUpperCase() + panelWord.slice(1);
 ---
-<Base title="Petty Evals — rigorous benchmarks for problems that don't matter">
+<Base title="Petty Evals: rigorous benchmarks for problems that don't matter">
   <section class="mb-12 flex flex-col gap-8">
     <div class="flex flex-col gap-4">
       <div class="flex flex-wrap items-center gap-3 text-sm text-zinc-600">
@@ -53,13 +51,13 @@ const PanelWord = panelWord.charAt(0).toUpperCase() + panelWord.slice(1);
           </svg>
           Open
         </span>
-        <p><span class="font-mono text-zinc-900">kmelve</span> wants to merge {items.length} opinions into <span class="rounded bg-sky-50 px-1.5 py-0.5 font-mono text-sky-700">main</span></p>
+        <p><span class="font-mono text-zinc-900">kmelve</span> wants to merge {items.length} strongly held opinions into <span class="rounded bg-sky-50 px-1.5 py-0.5 font-mono text-sky-700">main</span></p>
       </div>
       <h1 class="max-w-[24ch] font-wide text-4xl font-semibold tracking-tight text-balance sm:text-5xl md:text-6xl">
-        Settle every petty code-style argument, forever <span class="font-normal text-zinc-400">#{items.length}</span>
+        Settle tabs vs. spaces (and {items.length - 1} other arguments) for good <span class="font-normal text-zinc-400">#{items.length}</span>
       </h1>
       <p class="max-w-[62ch] text-lg text-pretty text-zinc-600">
-        Tabs or spaces? <code class="font-mono text-zinc-900">===</code> or <code class="font-mono text-zinc-900">==</code>? {PanelWord} AI coding models wrote {totalSamples.toLocaleString('en-US')} pieces of ordinary code. A classifier counted what they actually did, then each model saw the tally and left a review. They were not nice about it.
+        Remember when we used to argue about tabs vs. spaces? Now that agents write code for us, we should at least know which side they're on. This is Petty Evals.
       </p>
     </div>
 
@@ -71,22 +69,22 @@ const PanelWord = panelWord.charAt(0).toUpperCase() + panelWord.slice(1);
           <a href={`/fights/${hottest.slug}#review-${hottest.summary.featuredQuote.modelId}`} class="font-mono text-sky-700 hover:underline">{hottest.slug}</a>
         </figcaption>
         <blockquote class="px-4 py-4 text-lg text-pretty text-zinc-800">
-          <p>{hottest.summary.featuredQuote.text}</p>
+          <p><InlineCode text={hottest.summary.featuredQuote.text} /></p>
         </blockquote>
       </figure>
     )}
 
     <div class="flex flex-wrap items-center gap-4">
-      <a href="#fights" class="rounded-md bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-zinc-700">Review the diff</a>
-      <a href="/beef" class="text-sm font-medium text-zinc-700 hover:text-zinc-950">Who's beefing with whom →</a>
-      <a href="/methodology" class="text-sm font-medium text-zinc-700 hover:text-zinc-950">Read the CI config →</a>
+      <a href="#fights" class="rounded-md bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-zinc-700">Read the reviews</a>
+      <a href="/beef" class="text-sm font-medium text-zinc-700 hover:text-zinc-950">Which models can't stand each other →</a>
+      <a href="/methodology" class="text-sm font-medium text-zinc-700 hover:text-zinc-950">How this works (it's a real eval) →</a>
     </div>
   </section>
 
   <section id="fights" class="mb-16 scroll-mt-6">
     <div class="overflow-hidden rounded-lg border border-zinc-300">
       <div class="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200 bg-zinc-50 px-4 py-3 text-sm">
-        <p class="font-semibold">{items.length} open arguments <span class="font-normal text-zinc-600">· {contested} contested</span></p>
+        <p class="font-semibold">{items.length} arguments <span class="font-normal text-zinc-600">· {contested} where the models disagreed</span></p>
         <p class="text-zinc-600">Sort: most contested</p>
       </div>
       <ul role="list" class="divide-y divide-zinc-200">
@@ -100,7 +98,7 @@ const PanelWord = panelWord.charAt(0).toUpperCase() + panelWord.slice(1);
                 </div>
                 <p class="text-sm text-pretty text-zinc-600 sm:truncate">
                   {item.summary ? (
-                    <><span class="font-medium text-zinc-900">{prettyLabel(item.summary.winner)} {item.summary.score}</span> · {item.summary.headline}</>
+                    <>{item.summary.mode === 'unanimous' && <><span class="font-medium text-zinc-900">{item.summary.winnerName} {item.summary.score}</span> · </>}{item.summary.headline}</>
                   ) : (
                     <span class="font-mono">#{item.slug} · awaiting review</span>
                   )}
@@ -126,7 +124,7 @@ const PanelWord = panelWord.charAt(0).toUpperCase() + panelWord.slice(1);
   <section class="flex flex-col items-start gap-4 rounded-lg border border-dashed border-zinc-300 p-6 sm:flex-row sm:items-center sm:justify-between md:p-8">
     <div class="flex flex-col gap-1">
       <h2 class="text-xl font-semibold tracking-tight">Got a pettier argument?</h2>
-      <p class="text-zinc-600">Open a PR with a new fight. I'll put it in front of all {panelWord} reviewers and credit you on the page.</p>
+      <p class="text-zinc-600">Open a PR with a new fight (one TypeScript file and a regex). I'll run it past all {panelWord} models and put your name on the page.</p>
     </div>
     <a href="https://github.com/kmelve/petty-evals/blob/main/CONTRIBUTING.md" class="shrink-0 rounded-md border border-zinc-300 bg-white px-4 py-2.5 text-sm font-medium hover:bg-zinc-50">New fight</a>
   </section>

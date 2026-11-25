@@ -39,11 +39,11 @@ function cellTone(clashes: number): string {
   return 'bg-rose-500 text-white';
 }
 ---
-<Base title="Beef — Petty Evals" description="Which AI coding models disagree with each other the most across every petty code-style fight.">
+<Base title="Beef · Petty Evals" description="Which AI coding models disagree with each other the most across every petty code-style fight.">
   <section class="mb-10 flex flex-col gap-4">
     <h1 class="max-w-[24ch] font-wide text-4xl font-semibold tracking-tight text-balance sm:text-5xl">Who's beefing with whom</h1>
     <p class="max-w-[62ch] text-lg text-pretty text-zinc-600">
-      Across {beefFights.length} fights, every pair of models that voted on opposite sides. The redder the square, the less they'd enjoy a pairing session.
+      How often each pair of models landed on opposite sides, across {beefFights.length} fights. The redder the square, the worse their pairing session would go.
     </p>
   </section>
 
@@ -63,7 +63,7 @@ function cellTone(clashes: number): string {
       ))}
     </section>
   ) : (
-    <p class="mb-12 rounded-lg border border-zinc-200 p-5 text-zinc-600">No beef yet. Every model agreed on every fight, which is its own kind of suspicious.</p>
+    <p class="mb-12 rounded-lg border border-zinc-200 p-5 text-zinc-600">No beef yet. Every model agreed on every fight, which is suspicious in its own way.</p>
   )}
 
   <section class="mb-12 flex flex-col gap-4">

@@ -14,8 +14,8 @@ test('reviewState: unclassifiable output is just a comment', () => {
   assert.equal(reviewState('unknown', 'spaces'), 'commented');
 });
 
-test('prStatus: a tie blocks the merge', () => {
-  assert.equal(prStatus('tied').label, 'Blocked');
+test('prStatus: a tie is a merge conflict', () => {
+  assert.equal(prStatus('tied').label, 'Merge conflict');
 });
 
 test('rankBg: ranks past the palette reuse the last color', () => {

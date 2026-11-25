@@ -1,14 +1,22 @@
 ---
 import '../styles/global.css';
+import { getCollection } from 'astro:content';
+import { numberWord } from '../lib/site/fight-summary.ts';
 
 interface Props {
   title: string;
   description?: string;
   ogImage?: string;
 }
+// Default description reads the real panel size and sample count from the results.
+const results = (await getCollection('results')).map((r) => r.data);
+const panelSize = Math.max(0, ...results.map((r) => r.models.length));
+const samples = results.reduce((sum, r) => sum + r.totalRuns, 0);
+const PanelWord = numberWord(panelSize).charAt(0).toUpperCase() + numberWord(panelSize).slice(1);
+
 const {
   title,
-  description = 'I made AI coding models review each other on petty dev debates. Tabs vs spaces, === vs ==, semicolons. They were not nice about it.',
+  description = `${PanelWord} AI coding models wrote ${samples.toLocaleString('en-US')} code samples so we can finally settle tabs vs. spaces. Then they reviewed each other's choices.`,
   ogImage = '/og/home.png',
 } = Astro.props;
 
@@ -84,7 +92,7 @@ const tabs = [
     <footer class="border-t border-zinc-200 px-6 py-8 md:px-10">
       <div class="mx-auto flex max-w-5xl flex-col justify-between gap-2 text-sm text-zinc-600 sm:flex-row">
         <p>Rigorous benchmarks for problems that don't matter.</p>
-        <p>Made by <a href="https://github.com/kmelve" class="font-medium text-zinc-900 hover:text-sky-700">@kmelve</a>. Models called via OpenRouter.</p>
+        <p>Made by <a href="https://github.com/kmelve" class="font-medium text-zinc-900 hover:text-sky-700">@kmelve</a>. Take with all the pinches of salt.</p>
       </div>
     </footer>
     {import.meta.env.PROD && (

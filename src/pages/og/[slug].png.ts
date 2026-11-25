@@ -16,7 +16,7 @@ export const GET: APIRoute = async ({ params }) => {
 
   let node;
   if (params.slug === 'home') {
-    const summaries = results.map((r) => summarize(r));
+    const summaries = results.map((r) => summarize({ ...r, sides: fights.find((f) => f.id === r.slug)?.data.sides }));
     const largest = results.reduce((a, b) => (b.models.length > a.models.length ? b : a), results[0]);
     node = homeCard({
       fights: fights.length,
@@ -29,7 +29,7 @@ export const GET: APIRoute = async ({ params }) => {
     const result = results.find((r) => r.slug === params.slug);
     const title = fight.data.title.replace(/[?.]$/, '');
     node = result
-      ? fightCard({ title, summary: summarize({ ...result, slug: fight.id }), votes: Object.fromEntries(result.models.map((m) => [m.id, m.vote])) })
+      ? fightCard({ title, summary: summarize({ ...result, slug: fight.id, sides: fight.data.sides }), votes: Object.fromEntries(result.models.map((m) => [m.id, m.vote])) })
       : homeCard({ fights: fights.length, contested: 0, names: [], samples: 0 });
   }
 

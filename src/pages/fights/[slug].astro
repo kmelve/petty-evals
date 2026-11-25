@@ -22,7 +22,7 @@ export async function getStaticPaths() {
 const { fight, result } = Astro.props;
 const slug = fight.id;
 const title = fight.data.title.replace(/[?.]$/, '');
-const summary = result ? summarize({ ...result, slug }) : null;
+const summary = result ? summarize({ ...result, slug, sides: fight.data.sides }) : null;
 const rankOf = new Map(summary?.segments.map((s) => [s.modelId, s.rank]) ?? []);
 
 // Dissent first: the losing side's reviews are the ones people screenshot.
@@ -39,7 +39,7 @@ const description = (summary
   : fight.data.question
 ).replace(/`/g, '');
 ---
-<Base title={`${title.replace(/`/g, '')}? — Petty Evals`} description={description} ogImage={`/og/${slug}.png`}>
+<Base title={`${title.replace(/`/g, '')}? · Petty Evals`} description={description} ogImage={`/og/${slug}.png`}>
   <!-- PR header -->
   <div class="mb-8 flex flex-col gap-4 border-b border-zinc-200 pb-6">
     <h1 class="max-w-[30ch] font-wide text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
@@ -80,7 +80,7 @@ const description = (summary
         <div class="flex flex-col gap-4 px-4 py-4">
           <p class="text-lg text-pretty text-zinc-900"><InlineCode text={fight.data.question} /></p>
           <p class="text-pretty text-zinc-600">
-            Nobody was asked their opinion. Each model got these ordinary coding prompts{runsPerPrompt > 0 && <>, {runsPerPrompt} times each</>}, and a classifier counted what the code actually did:
+            I never asked the models what they prefer (they'd just tell me what I wanted to hear). Each one got these prompts{runsPerPrompt > 0 ? ` ${runsPerPrompt} times` : ''}, and a classifier counted what the code actually did:
           </p>
           <ol class="flex list-decimal flex-col gap-2 pl-6 text-zinc-800">
             {fight.data.promptVariants.map((p: string) => <li><code class="font-mono text-sm">{p}</code></li>)}
@@ -92,7 +92,7 @@ const description = (summary
       {summary && result && (
         <section class:list={['flex flex-col gap-4 rounded-lg border-2 p-5', summary.mode === 'unanimous' || summary.mode === 'lone-dissent' ? 'border-emerald-500' : summary.mode === 'majority' ? 'border-amber-400' : 'border-rose-500']}>
           <div class="flex flex-wrap items-baseline justify-between gap-3">
-            <p class="font-wide text-4xl font-semibold tracking-tight sm:text-5xl">{prettyLabel(summary.winner)}</p>
+            <p class="font-wide text-4xl font-semibold tracking-tight sm:text-5xl">{summary.winnerName}</p>
             <p class="font-mono text-3xl font-semibold tabular-nums">{summary.score}</p>
           </div>
           <VoteStrip segments={summary.segments} colors={[...RANK_BG]} class="h-3 gap-1" segmentClass="rounded-sm" />
@@ -109,7 +109,7 @@ const description = (summary
       {reviews.length > 0 && summary && (
         <section class="flex flex-col gap-5">
           <h2 class="text-xl font-semibold tracking-tight">Reviews</h2>
-          <p class="-mt-3 max-w-[62ch] text-pretty text-zinc-600">Each model saw the full tally and got one sentence. Unedited.</p>
+          <p class="-mt-3 max-w-[62ch] text-pretty text-zinc-600">Each model saw the tally and got one sentence to react. I haven't edited them, and I take no responsibility for them.</p>
           {reviews.map((m) => (
             <ReviewComment slug={slug} fightTitle={`${title.replace(/`/g, '')}?`} model={m} winner={summary.winner} rank={m.rank} />
           ))}

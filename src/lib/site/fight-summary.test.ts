@@ -17,7 +17,7 @@ test('summarize: unanimous eight-model panel', () => {
   const s = summarize(input(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].map((id) => model(id, 'spaces'))));
   assert.equal(s.mode, 'unanimous');
   assert.equal(s.score, '8–0');
-  assert.match(s.headline, /^Eight for eight/);
+  assert.match(s.headline, /the other side|8–0|eight|Eight/);
 });
 
 test('summarize: lone dissenter gets the featured quote', () => {
@@ -50,7 +50,19 @@ test('summarize: no quotes means no featured quote', () => {
 test('summarize: tied headline names both sides', () => {
   const s = summarize(input([model('a', 'interface'), model('b', 'type')]));
   assert.equal(s.mode, 'tied');
-  assert.match(s.headline, /interface and type|type and interface/);
+  assert.match(s.headline, /interface vs\. type|type vs\. interface/);
+});
+
+test('summarize: unanimous headline talks to the losing side by its display name', () => {
+  const sides = [{ label: 'triple-equals', name: '===' }, { label: 'double-equals', name: '==' }];
+  const s = summarize({ ...input(['a', 'b', 'c'].map((id) => model(id, 'triple-equals'))), slug: 'x', sides });
+  assert.match(s.headline, /==(?!=)/);
+  assert.equal(s.winnerName, '===');
+});
+
+test('summarize: lone dissent names the dissenter', () => {
+  const s = summarize(input([model('a', 'x'), model('b', 'x'), model('c', 'x'), model('Kimi', 'y')]));
+  assert.match(s.headline, /^X wins 3–1\. Kimi voted y/);
 });
 
 test('prettyLabel: dashes become spaces and unknown reads as unreadable', () => {

@@ -11,16 +11,16 @@ function gh(path: string) {
   return repo + '/blob/main/' + path;
 }
 ---
-<Base title="How I did this — Petty Evals" description="The methodology behind Petty Evals — a real eval pipeline for stupid questions. Wilson CIs, mode-aware pundits, reclassify-in-place. The honest version.">
+<Base title="How I did this · Petty Evals" description="The methodology behind Petty Evals: a real eval pipeline for stupid questions. Wilson CIs, mode-aware pundits, reclassify-in-place. The honest version.">
   <div class="mb-10 flex flex-col gap-4 border-b border-zinc-200 pb-8">
     <p class="font-mono text-sm text-zinc-500">.github/workflows/petty-evals.yml</p>
     <h1 class="max-w-[24ch] font-wide text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
       How I did this <span class="font-normal text-zinc-400">(the actual nerd shit)</span>
     </h1>
     <p class="max-w-[62ch] text-lg text-pretty text-zinc-600">
-      Real eval, stupid questions. This page is also a guide — if you've ever wanted to
-      run your own eval against multiple models, every choice I made is here, linked to
-      the actual code on GitHub. Steal liberally.
+      Real eval, stupid questions. This page is also a guide: if you've ever wanted to
+      run your own eval against a bunch of models, every choice I made is here, linked to
+      the code on GitHub. Steal liberally.
     </p>
   </div>
 
@@ -127,13 +127,13 @@ function gh(path: string) {
       "the model used three colons in a row".
     </p>
     <p>
-      <strong>Abstentions are not votes.</strong> Plenty of runs never touch the contested
-      choice: ask for a PHP function and you might get one with no array literal at all. Those
-      runs are <code>'unknown'</code>, and they don't count. A model's vote is its most common
-      <em>readable</em> label, and its confidence is measured over readable runs only. I learned
-      this the hard way: GPT-6.2 wrote array-free code in 33 of 60 runs on <code>array-syntax-php</code>,
-      used <code>[]</code> in all 27 others, and the first version of this pipeline declared its
-      vote to be "unknown". The other models then roasted it for that. Unfairly, for once.
+      <strong>Abstentions are not votes.</strong> Plenty of runs never touch the question
+      (ask for a PHP function and you might get one with no array literal at all). Those runs
+      are <code>'unknown'</code> and don't count. A model's vote is its most common
+      <em>readable</em> label. I learned this the hard way: GPT-6.2 wrote array-free code in
+      33 of 60 runs on <code>array-syntax-php</code> and used <code>[]</code> in the other 27,
+      so the first version of the pipeline said it voted "unknown". Seven models then roasted
+      it for a vote it never cast.
     </p>
 
     <h2>Step 4: stats that aren't security theater</h2>
@@ -233,15 +233,15 @@ function gh(path: string) {
     <h2>Caveats (the things I want to be honest about)</h2>
     <p>
       <strong>Most of the panel are reasoning models, and some ignore temperature.</strong>
-      Both temperatures (0.0 and 0.7) get requested for bookkeeping consistency, but OpenRouter
-      quietly drops the parameter for models that don't accept it (currently the Claude and GPT
-      models). Reasoning effort is set to <code>low</code> for everyone: style choices don't need
-      deep thought, and reasoning tokens are billed.
+      I still request both (0.0 and 0.7) so the bookkeeping stays consistent, but OpenRouter
+      quietly drops the setting for models that don't take it (right now, the Claude and GPT
+      models). Reasoning effort is <code>low</code> for everyone. Tabs vs. spaces doesn't need
+      deep thought, and reasoning tokens cost money.
     </p>
     <p>
-      <strong>This is {n} models, not all models.</strong> The panel ({panel.map((m) => m.displayName).join(', ')})
-      was picked from OpenRouter's most-used programming models, mixing the big US labs with the
-      open-weight models people actually route coding traffic to. More are wired up in
+      <strong>This is {n} models, not all of them.</strong> I picked the panel ({panel.map((m) => m.displayName).join(', ')})
+      from OpenRouter's most-used programming models: the big US labs plus the open-weight models
+      people actually send coding work to. More are wired up in
       <a href={gh('src/lib/eval/providers/index.ts')}><code>providers/index.ts</code></a> behind
       <code>enabled: false</code>, and <code>pnpm models:popular</code> shows the current ranking.
     </p>
