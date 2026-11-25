@@ -186,10 +186,30 @@ export async function firePundits(
       representativeSample: pickRepresentativeSample(m.runs, m.vote),
     });
     try {
-      m.punditQuote = await callPundit(config, prompt);
+      m.punditQuote = await withPatience(() => callPundit(config, prompt));
       onEvent(m.id, { quote: m.punditQuote });
     } catch (error) {
       onEvent(m.id, { error });
     }
   }
+}
+
+/**
+ * Upstream rate limits (seen on GPT via OpenRouter) outlast the SDK's quick
+ * retries. Wait it out a few times before giving up on a pundit, and treat an
+ * empty reply as a failure.
+ */
+export async function withPatience<T>(fn: () => Promise<T>, delaysMs = [10_000, 30_000, 60_000], sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= delaysMs.length; attempt++) {
+    try {
+      const value = await fn();
+      if (typeof value === 'string' && value.trim() === '') throw new Error('Empty pundit reply');
+      return value;
+    } catch (error) {
+      lastError = error;
+      if (attempt < delaysMs.length) await sleep(delaysMs[attempt]);
+    }
+  }
+  throw lastError;
 }

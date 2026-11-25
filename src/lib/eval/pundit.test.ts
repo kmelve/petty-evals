@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildPunditPrompt, classifyMode, cleanQuote, type PanelMember } from './pundit.ts';
+import { buildPunditPrompt, classifyMode, cleanQuote, withPatience, type PanelMember } from './pundit.ts';
 import type { Fight } from './types.ts';
 
 const fight: Fight = {
@@ -97,4 +97,15 @@ test('cleanQuote: strips wrapping straight and curly quotes', () => {
 test('cleanQuote: keeps a closing quote that belongs to an inner quotation', () => {
   const q = 'Tabs just means you called it "personal preference."';
   assert.equal(cleanQuote(q), q);
+});
+
+test('withPatience: retries after failures and returns the first success', async () => {
+  let calls = 0;
+  const value = await withPatience(async () => (++calls < 3 ? Promise.reject(new Error('429')) : 'ok'), [1, 1, 1], async () => {});
+  assert.equal(value, 'ok');
+  assert.equal(calls, 3);
+});
+
+test('withPatience: an empty reply counts as a failure', async () => {
+  await assert.rejects(withPatience(async () => '  ', [1], async () => {}), /Empty pundit reply/);
 });
