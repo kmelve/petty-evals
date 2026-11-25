@@ -1,0 +1,12 @@
+---
+import type { VerdictMode } from '../lib/eval/pundit.ts';
+import { prStatus } from '../lib/site/review.ts';
+
+interface Props {
+  mode: VerdictMode;
+  class?: string;
+}
+const { mode, class: className } = Astro.props;
+const status = prStatus(mode);
+---
+<span class:list={['rounded-full px-2.5 py-1 text-center text-sm font-medium whitespace-nowrap ring-1 ring-inset', status.tone, className]}>{status.label}</span>

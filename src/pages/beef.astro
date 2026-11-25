@@ -1,0 +1,120 @@
+---
+import Base from '../layouts/Base.astro';
+import Avatar from '../components/Avatar.astro';
+import InlineCode from '../components/InlineCode.astro';
+import { getCollection } from 'astro:content';
+import { computeBeef, findPair } from '../lib/site/beef.ts';
+import { modelName } from '../lib/site/fight-summary.ts';
+import { MODELS } from '../lib/eval/providers/index.ts';
+
+const fights = await getCollection('fights');
+const results = await getCollection('results');
+const titleBySlug = new Map(fights.map((f) => [f.id, f.data.title.replace(/[?.]$/, '')]));
+
+// Only count the current panel, so a half-finished re-run doesn't mix old and new models.
+const currentIds = new Set(MODELS.filter((m) => m.enabled).map((m) => m.id));
+const relevant = results
+  .map((r) => r.data)
+  .map((r) => ({
+    slug: r.slug,
+    title: titleBySlug.get(r.slug) ?? r.slug,
+    winner: r.verdict.winner,
+    models: r.models.map((m) => ({ id: m.id, name: modelName(m), vote: m.vote })),
+  }));
+const onCurrentPanel = relevant.filter((f) => f.models.some((m) => currentIds.has(m.id)));
+const beefFights = onCurrentPanel.length > 0 ? onCurrentPanel : relevant;
+const beef = computeBeef(beefFights);
+const order = beef.contrarians.map((c) => c.id);
+const nameOf = new Map(beef.models.map((m) => [m.id, m.name]));
+const maxClashes = Math.max(1, ...beef.pairs.map((p) => p.clashes));
+const top = beef.pairs.filter((p) => p.clashes > 0).slice(0, 3);
+const loyal = beef.contrarians.at(-1);
+const rebel = beef.contrarians[0];
+
+function cellTone(clashes: number): string {
+  const ratio = clashes / maxClashes;
+  if (clashes === 0) return 'bg-zinc-50 text-zinc-400';
+  if (ratio < 0.34) return 'bg-rose-100 text-rose-900';
+  if (ratio < 0.67) return 'bg-rose-300 text-rose-950';
+  return 'bg-rose-500 text-white';
+}
+---
+<Base title="Beef — Petty Evals" description="Which AI coding models disagree with each other the most across every petty code-style fight.">
+  <section class="mb-10 flex flex-col gap-4">
+    <h1 class="max-w-[24ch] font-wide text-4xl font-semibold tracking-tight text-balance sm:text-5xl">Who's beefing with whom</h1>
+    <p class="max-w-[62ch] text-lg text-pretty text-zinc-600">
+      Across {beefFights.length} fights, every pair of models that voted on opposite sides. The redder the square, the less they'd enjoy a pairing session.
+    </p>
+  </section>
+
+  {top.length > 0 ? (
+    <section class="mb-12 grid gap-4 md:grid-cols-3">
+      {top.map((p, i) => (
+        <article class="flex flex-col gap-3 rounded-lg border border-zinc-200 p-5">
+          <p class="font-mono text-sm tracking-wide text-rose-600 uppercase">{i === 0 ? 'Biggest beef' : `Runner-up #${i}`}</p>
+          <p class="text-xl font-semibold tracking-tight">{nameOf.get(p.a)} vs {nameOf.get(p.b)}</p>
+          <p class="text-zinc-600">Opposite sides in <strong class="font-semibold text-zinc-900 tabular-nums">{p.clashes} of {p.shared}</strong> fights.</p>
+          <ul role="list" class="flex flex-col gap-1 text-sm">
+            {p.fights.slice(0, 4).map((slug) => (
+              <li><a href={`/fights/${slug}`} class="text-sky-700 hover:underline"><InlineCode text={titleBySlug.get(slug) ?? slug} /></a></li>
+            ))}
+          </ul>
+        </article>
+      ))}
+    </section>
+  ) : (
+    <p class="mb-12 rounded-lg border border-zinc-200 p-5 text-zinc-600">No beef yet. Every model agreed on every fight, which is its own kind of suspicious.</p>
+  )}
+
+  <section class="mb-12 flex flex-col gap-4">
+    <h2 class="text-xl font-semibold tracking-tight">The matrix</h2>
+    <div class="overflow-x-auto rounded-lg border border-zinc-200">
+      <table class="w-full border-collapse text-sm">
+        <thead>
+          <tr>
+            <th class="bg-zinc-50 p-2"><span class="sr-only">Model</span></th>
+            {order.map((id) => <th class="bg-zinc-50 p-2 font-medium whitespace-nowrap text-zinc-700">{nameOf.get(id)}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {order.map((row) => (
+            <tr class="border-t border-zinc-200">
+              <th class="bg-zinc-50 px-3 py-2 text-left font-medium whitespace-nowrap text-zinc-700">{nameOf.get(row)}</th>
+              {order.map((col) => {
+                if (row === col) return <td class="bg-zinc-100 p-2 text-center text-zinc-300">·</td>;
+                const pair = findPair(beef, row, col);
+                const clashes = pair?.clashes ?? 0;
+                return (
+                  <td class:list={['p-2 text-center font-mono tabular-nums', cellTone(clashes)]} title={`${nameOf.get(row)} vs ${nameOf.get(col)}: ${clashes} of ${pair?.shared ?? 0} fights`}>
+                    {clashes}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="mb-12 flex flex-col gap-4">
+    <h2 class="text-xl font-semibold tracking-tight">Contrarian leaderboard</h2>
+    <p class="-mt-2 max-w-[62ch] text-pretty text-zinc-600">
+      How often each model ended up on the losing side.
+      {rebel && loyal && rebel.id !== loyal.id && <> {rebel.name} is the panel's designated hot-take machine. {loyal.name} has never had an original thought it couldn't find in a style guide.</>}
+    </p>
+    <ol role="list" class="divide-y divide-zinc-200 overflow-hidden rounded-lg border border-zinc-200">
+      {beef.contrarians.map((c, i) => (
+        <li class="flex items-center gap-3 px-4 py-3">
+          <span class="w-6 font-mono text-zinc-500 tabular-nums">{i + 1}</span>
+          <Avatar name={c.name} rank={c.againstMajority === 0 ? 0 : 2} />
+          <span class="flex-1 font-medium">{c.name}</span>
+          <span class="font-mono text-zinc-600 tabular-nums">lost {c.againstMajority} / {c.fights}</span>
+          <span class="hidden h-2 w-32 overflow-hidden rounded-full bg-zinc-100 sm:block">
+            <span class="block h-full w-(--share) rounded-full bg-rose-500" style={`--share: ${Math.round((100 * c.againstMajority) / Math.max(1, c.fights))}%`}></span>
+          </span>
+        </li>
+      ))}
+    </ol>
+  </section>
+</Base>

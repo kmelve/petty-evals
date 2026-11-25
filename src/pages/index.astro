@@ -1,89 +1,133 @@
 ---
 import Base from '../layouts/Base.astro';
+import Avatar from '../components/Avatar.astro';
+import StatusPill from '../components/StatusPill.astro';
+import InlineCode from '../components/InlineCode.astro';
 import { getCollection } from 'astro:content';
+import { summarize, numberWord, prettyLabel, type FightSummary } from '../lib/site/fight-summary.ts';
 
 const fights = await getCollection('fights');
-const allResults = import.meta.glob('../data/results/*.json', { eager: true }) as Record<string, { default: any }>;
-const resultsBySlug: Record<string, any> = {};
-for (const [path, mod] of Object.entries(allResults)) {
-  const slug = path.split('/').pop()!.replace('.json', '');
-  resultsBySlug[slug] = mod.default;
+const results = await getCollection('results');
+const resultBySlug = new Map(results.map((r) => [r.data.slug, r.data]));
+
+interface Item {
+  slug: string;
+  title: string;
+  category: string;
+  totalRuns: number;
+  disagreement: number;
+  summary: FightSummary | null;
 }
 
-function tallyString(tally: Record<string, number>): string {
-  return Object.entries(tally).map(([k, v]) => `${v} ${k}`).join(' · ');
-}
+const items: Item[] = fights
+  .map((f) => {
+    const r = resultBySlug.get(f.id);
+    return {
+      slug: f.id,
+      title: f.data.title.replace(/[?.]$/, ''),
+      category: f.data.category,
+      totalRuns: r?.totalRuns ?? 0,
+      disagreement: r?.verdict.disagreementIndex ?? 0,
+      summary: r ? summarize({ ...r, slug: f.id }) : null,
+    };
+  })
+  .sort((a, b) => b.disagreement - a.disagreement || a.title.localeCompare(b.title));
 
-const items = fights.map((f) => {
-  const r = resultsBySlug[f.id];
-  return {
-    slug: f.id,
-    title: f.data.title,
-    question: f.data.question,
-    category: f.data.category ?? 'formatting',
-    verdict: r?.verdict,
-    verdictTally: r?.verdict ? tallyString(r.verdict.tally) : '',
-    disagreement: r?.verdict?.disagreementIndex ?? 0,
-    totalRuns: r?.totalRuns ?? 0,
-  };
-}).sort((a, b) => (b.disagreement ?? 0) - (a.disagreement ?? 0));
+const withResults = items.filter((i) => i.summary);
+// Panel size and sample counts come from the data, so the copy stays true between re-runs.
+const panelSize = Math.max(0, ...withResults.map((i) => i.summary!.panelSize));
+const totalSamples = items.reduce((s, i) => s + i.totalRuns, 0);
+const contested = withResults.filter((i) => i.summary!.mode !== 'unanimous').length;
+const hottest = withResults.find((i) => i.summary!.featuredQuote);
+const panelWord = numberWord(panelSize);
+const PanelWord = panelWord.charAt(0).toUpperCase() + panelWord.slice(1);
 ---
 <Base title="Petty Evals — rigorous benchmarks for problems that don't matter">
-  <section class="mb-16">
-    <h1 class="display text-5xl md:text-7xl mb-5 max-w-3xl">
-      I made four AIs <span style="color: var(--color-coral);">fight</span><br>
-      about petty dev debates.
-    </h1>
-    <p class="text-lg md:text-xl max-w-2xl mb-7" style="color: var(--color-muted);">
-      Tabs or spaces? <code>===</code> or <code>==</code>? <code>let</code> or <code>const</code>?
-      I made Claude, GPT, and Gemini <a href="/methodology" class="styled">write actual code</a>,
-      counted what they did, then asked them to <em>fight about it</em>. They obliged.
-      The fight at the top is the bloodiest.
-    </p>
-    <div class="flex gap-3 flex-wrap">
-      <a href="#fights" class="sticker">See the fights</a>
-      <a href="/methodology" class="sticker sticker--blue">How I did it</a>
+  <section class="mb-12 flex flex-col gap-8">
+    <div class="flex flex-col gap-4">
+      <div class="flex flex-wrap items-center gap-3 text-sm text-zinc-600">
+        <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 px-3 py-1 font-medium text-white">
+          <svg viewBox="0 0 16 16" class="size-4" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <circle cx="4" cy="3.5" r="1.5" /><circle cx="4" cy="12.5" r="1.5" /><circle cx="12" cy="12.5" r="1.5" />
+            <path d="M4 5v6M12 11V7a2 2 0 0 0-2-2H7.5M9 3.5 7.5 5 9 6.5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          Open
+        </span>
+        <p><span class="font-mono text-zinc-900">kmelve</span> wants to merge {items.length} opinions into <span class="rounded bg-sky-50 px-1.5 py-0.5 font-mono text-sky-700">main</span></p>
+      </div>
+      <h1 class="max-w-[24ch] font-wide text-4xl font-semibold tracking-tight text-balance sm:text-5xl md:text-6xl">
+        Settle every petty code-style argument, forever <span class="font-normal text-zinc-400">#{items.length}</span>
+      </h1>
+      <p class="max-w-[62ch] text-lg text-pretty text-zinc-600">
+        Tabs or spaces? <code class="font-mono text-zinc-900">===</code> or <code class="font-mono text-zinc-900">==</code>? {PanelWord} AI coding models wrote {totalSamples.toLocaleString('en-US')} pieces of ordinary code. A classifier counted what they actually did, then each model saw the tally and left a review. They were not nice about it.
+      </p>
+    </div>
+
+    {hottest?.summary?.featuredQuote && (
+      <figure class="flex max-w-3xl flex-col overflow-hidden rounded-lg border border-zinc-200">
+        <figcaption class="flex flex-wrap items-center gap-2 border-b border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm text-zinc-600">
+          <span class="font-semibold text-zinc-900">{hottest.summary.featuredQuote.name}</span>
+          requested changes on
+          <a href={`/fights/${hottest.slug}#review-${hottest.summary.featuredQuote.modelId}`} class="font-mono text-sky-700 hover:underline">{hottest.slug}</a>
+        </figcaption>
+        <blockquote class="px-4 py-4 text-lg text-pretty text-zinc-800">
+          <p>{hottest.summary.featuredQuote.text}</p>
+        </blockquote>
+      </figure>
+    )}
+
+    <div class="flex flex-wrap items-center gap-4">
+      <a href="#fights" class="rounded-md bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-zinc-700">Review the diff</a>
+      <a href="/beef" class="text-sm font-medium text-zinc-700 hover:text-zinc-950">Who's beefing with whom →</a>
+      <a href="/methodology" class="text-sm font-medium text-zinc-700 hover:text-zinc-950">Read the CI config →</a>
     </div>
   </section>
 
-  <section id="fights" class="mb-16">
-    <div class="flex items-end justify-between mb-6 border-b-2 pb-3" style="border-color: var(--color-ink);">
-      <h2 class="display text-3xl">The fights</h2>
-      <span class="text-sm" style="color: var(--color-muted);">
-        sorted by Disagreement Index
-      </span>
-    </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-      {items.map((item) => (
-        <a href={`/fights/${item.slug}`} class="chunky p-5 block transition-transform hover:-translate-y-1">
-          <div class="text-xs font-mono mb-2" style="color: var(--color-muted);">
-            {item.category} · {item.totalRuns} samples
-          </div>
-          <div class="display text-2xl mb-3 leading-tight">
-            {item.title.replace(/[?.]$/, '')}<span style="color: var(--color-coral);">?</span>
-          </div>
-          {item.verdict ? (
-            <div class="display text-xl" style="color: var(--color-coral);">
-              {item.verdict.winner.toUpperCase()}
-              <span class="text-sm font-normal" style="color: var(--color-ink); font-family: var(--font-body);">
-                · {item.verdictTally}
-              </span>
-            </div>
-          ) : (
-            <div class="text-sm" style="color: var(--color-muted);">pending data</div>
-          )}
-        </a>
-      ))}
+  <section id="fights" class="mb-16 scroll-mt-6">
+    <div class="overflow-hidden rounded-lg border border-zinc-300">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200 bg-zinc-50 px-4 py-3 text-sm">
+        <p class="font-semibold">{items.length} open arguments <span class="font-normal text-zinc-600">· {contested} contested</span></p>
+        <p class="text-zinc-600">Sort: most contested</p>
+      </div>
+      <ul role="list" class="divide-y divide-zinc-200">
+        {items.map((item) => (
+          <li>
+            <a href={`/fights/${item.slug}`} class="flex flex-col gap-3 px-4 py-4 hover:bg-zinc-50 sm:flex-row sm:items-center sm:gap-6">
+              <div class="flex min-w-0 flex-1 flex-col gap-1.5">
+                <div class="flex flex-wrap items-center gap-2">
+                  <h2 class="text-base font-semibold"><InlineCode text={item.title} /></h2>
+                  <span class="rounded-full bg-sky-50 px-2 py-0.5 text-sm text-sky-700 ring-1 ring-sky-600/20 ring-inset">{item.category}</span>
+                </div>
+                <p class="text-sm text-pretty text-zinc-600 sm:truncate">
+                  {item.summary ? (
+                    <><span class="font-medium text-zinc-900">{prettyLabel(item.summary.winner)} {item.summary.score}</span> · {item.summary.headline}</>
+                  ) : (
+                    <span class="font-mono">#{item.slug} · awaiting review</span>
+                  )}
+                </p>
+              </div>
+              {item.summary && (
+                <div class="flex shrink-0 items-center gap-4">
+                  <div class="flex -space-x-1.5">
+                    {item.summary.segments.map((s) => (
+                      <Avatar name={s.name} rank={s.rank} title={`${s.name}: ${prettyLabel(s.vote)}`} />
+                    ))}
+                  </div>
+                  <StatusPill mode={item.summary.mode} class="w-44" />
+                </div>
+              )}
+            </a>
+          </li>
+        ))}
+      </ul>
     </div>
   </section>
 
-  <section class="my-16 chunky chunky--coral p-8 md:p-10">
-    <div class="display text-3xl md:text-4xl mb-3">Got a pettier debate?</div>
-    <p class="text-lg mb-5 max-w-xl">
-      Open a PR with a new fight. I'll run it across all four models and add your name to the byline.
-    </p>
-    <a href="https://github.com/kmelve/petty-evals/blob/main/CONTRIBUTING.md" class="sticker">
-      Submit via PR →
-    </a>
+  <section class="flex flex-col items-start gap-4 rounded-lg border border-dashed border-zinc-300 p-6 sm:flex-row sm:items-center sm:justify-between md:p-8">
+    <div class="flex flex-col gap-1">
+      <h2 class="text-xl font-semibold tracking-tight">Got a pettier argument?</h2>
+      <p class="text-zinc-600">Open a PR with a new fight. I'll put it in front of all {panelWord} reviewers and credit you on the page.</p>
+    </div>
+    <a href="https://github.com/kmelve/petty-evals/blob/main/CONTRIBUTING.md" class="shrink-0 rounded-md border border-zinc-300 bg-white px-4 py-2.5 text-sm font-medium hover:bg-zinc-50">New fight</a>
   </section>
 </Base>

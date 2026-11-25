@@ -82,6 +82,6 @@ if needed. A maintainer runs the pipeline and merges the result.
 
 ## Status
 
-V1 scaffold (Day 2 of 7). The pipeline is wired but the launch pipeline run has
-not yet executed; the homepage and fight detail page render placeholder data
-with an honest "placeholder" badge until that changes.
+28 fights, judged by an 8-model panel (Claude Opus and Sonnet, GPT, Gemini,
+Kimi, GLM, DeepSeek, MiniMax) through OpenRouter. The site presents each fight
+as a pull request the models review; `/beef` shows which models disagree most.

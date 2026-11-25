@@ -1,160 +1,163 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { getCollection } from 'astro:content';
-import VoteCard from '../../components/VoteCard.astro';
-import PunditCard from '../../components/PunditCard.astro';
+import Avatar from '../../components/Avatar.astro';
+import StatusPill from '../../components/StatusPill.astro';
+import InlineCode from '../../components/InlineCode.astro';
+import ReviewComment from '../../components/ReviewComment.astro';
 import Receipts from '../../components/Receipts.astro';
+import VoteStrip from '../../components/VoteStrip.astro';
+import { getCollection } from 'astro:content';
+import { summarize, prettyLabel, modelName } from '../../lib/site/fight-summary.ts';
+import { RANK_BG, rankText, prStatus } from '../../lib/site/review.ts';
 
 export async function getStaticPaths() {
   const fights = await getCollection('fights');
-  return fights.map((f) => ({ params: { slug: f.id }, props: { fight: f } }));
+  const results = await getCollection('results');
+  return fights.map((f) => ({
+    params: { slug: f.id },
+    props: { fight: f, result: results.find((r) => r.data.slug === f.id)?.data ?? null },
+  }));
 }
 
-const { fight } = Astro.props;
+const { fight, result } = Astro.props;
 const slug = fight.id;
+const title = fight.data.title.replace(/[?.]$/, '');
+const summary = result ? summarize({ ...result, slug }) : null;
+const rankOf = new Map(summary?.segments.map((s) => [s.modelId, s.rank]) ?? []);
 
-// Lazy-load the results JSON for this fight via Vite glob.
-const allResults = import.meta.glob('../../data/results/*.json', { eager: true }) as Record<string, { default: any }>;
-const resultEntry = Object.entries(allResults).find(([path]) => path.endsWith(`/${slug}.json`));
-const result = resultEntry ? (resultEntry[1] as any).default : null;
+// Dissent first: the losing side's reviews are the ones people screenshot.
+const reviews = result
+  ? [...result.models]
+      .map((m) => ({ ...m, name: modelName(m), rank: rankOf.get(m.id) ?? 0 }))
+      .sort((a, b) => b.rank - a.rank || a.name.localeCompare(b.name))
+  : [];
 
-function verdictSubtitle(tally: Record<string, number>, total: number): string {
-  const values = Object.values(tally);
-  const max = Math.max(...values);
-  const topCount = values.filter(v => v === max).length;
-  if (max === total) return 'Unanimous. Anyone disagreeing with this in 2026 needs to log off.';
-  if (max === total - 1) return 'Three against one. The dissenter is about to be put on blast.';
-  if (max === 2 && topCount > 1) return 'It is a TIE. Two against two. They are throwing hands below.';
-  return 'A real fight. Scroll for the dunks.';
-}
-
-function tallyString(tally: Record<string, number>): string {
-  return Object.entries(tally).map(([k, v]) => `${v} ${k}`).join(' · ');
-}
-function tallyTotal(tally: Record<string, number>): number {
-  return Object.values(tally).reduce((a, b) => a + b, 0);
-}
-
-const winnerLabel = result ? result.verdict.winner.toUpperCase() : '?';
-const tallyParts = result ? tallyString(result.verdict.tally) : '';
-const totalVoters = result ? tallyTotal(result.verdict.tally) : 0;
+const runsPerPrompt = result ? Math.round(result.totalRuns / Math.max(1, result.models.length) / fight.data.promptVariants.length) : 0;
+const runDate = result ? new Date(result.runFinishedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' }) : null;
+const description = (summary
+  ? `${prettyLabel(summary.winner)} ${summary.score}. ${summary.headline} ${fight.data.question}`
+  : fight.data.question
+).replace(/`/g, '');
 ---
-<Base
-  title={`${fight.data.title} — Petty Evals`}
-  description={fight.data.question}
-  ogImage={`/og/${slug}.png`}
->
-  <div class="mb-3">
-    <span class="sticker sticker--blue">{fight.data.category ?? 'formatting'}</span>
-  </div>
-  <h1 class="display text-5xl md:text-7xl mb-8 max-w-3xl">
-    {fight.data.title.replace(/[?.]$/, '')}<span style="color: var(--color-coral);">?</span>
-  </h1>
-
-  {result && (
-    <div class="mb-16">
-      <div class="display text-7xl md:text-9xl" style="color: var(--color-coral);">
-        {winnerLabel}
-      </div>
-      <div class="display text-3xl md:text-4xl mt-3">
-        {tallyParts}
-      </div>
-      <p class="mt-4 max-w-2xl text-lg" style="color: var(--color-muted);">
-        {verdictSubtitle(result.verdict.tally, totalVoters)}
+<Base title={`${title.replace(/`/g, '')}? — Petty Evals`} description={description} ogImage={`/og/${slug}.png`}>
+  <!-- PR header -->
+  <div class="mb-8 flex flex-col gap-4 border-b border-zinc-200 pb-6">
+    <h1 class="max-w-[30ch] font-wide text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+      <InlineCode text={title} />? <span class="font-normal text-zinc-400">#{slug}</span>
+    </h1>
+    <div class="flex flex-wrap items-center gap-3 text-sm text-zinc-600">
+      {summary ? <StatusPill mode={summary.mode} /> : <span class="rounded-full bg-zinc-100 px-2.5 py-1 font-medium text-zinc-700">Awaiting review</span>}
+      <p>
+        <span class="font-medium text-zinc-900">{fight.data.submittedBy}</span> opened this argument
+        {result && <> · {result.models.length} reviewers · {result.totalRuns.toLocaleString('en-US')} samples · ${result.totalCostUsd.toFixed(2)} · run {runDate}</>}
       </p>
     </div>
-  )}
+  </div>
 
-  <section class="mb-12">
-    <details class="accordion">
-      <summary>The exact prompts I used ({fight.data.promptVariants.length} variants)</summary>
-      <div class="pb-6 pt-2">
-        <p class="text-sm mb-4 max-w-2xl" style="color: var(--color-muted);">
-          Each model got each prompt 20 times (2 temperatures × 10 runs). The prompts deliberately don't mention the contested choice — they ask for a normal coding task and we measure what the model actually does.
-        </p>
-        <ol class="space-y-3 list-decimal pl-6">
-          {fight.data.promptVariants.map((p: string) => (
-            <li class="leading-relaxed">
-              <code class="text-sm">{p}</code>
-            </li>
+  <div class="grid gap-10 lg:grid-cols-[minmax(0,1fr)_16rem]">
+    <div class="flex min-w-0 flex-col gap-8">
+      <!-- Description -->
+      <article class="overflow-hidden rounded-lg border border-zinc-200">
+        <header class="border-b border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm text-zinc-600">
+          <span class="font-semibold text-zinc-900">{fight.data.submittedBy}</span> commented
+        </header>
+        <div class="flex flex-col gap-4 px-4 py-4">
+          <p class="text-lg text-pretty text-zinc-900"><InlineCode text={fight.data.question} /></p>
+          <p class="text-pretty text-zinc-600">
+            Nobody was asked their opinion. Each model got these ordinary coding prompts{runsPerPrompt > 0 && <>, {runsPerPrompt} times each</>}, and a classifier counted what the code actually did:
+          </p>
+          <ol class="flex list-decimal flex-col gap-2 pl-6 text-zinc-800">
+            {fight.data.promptVariants.map((p: string) => <li><code class="font-mono text-sm">{p}</code></li>)}
+          </ol>
+        </div>
+      </article>
+
+      <!-- Verdict box -->
+      {summary && result && (
+        <section class:list={['flex flex-col gap-4 rounded-lg border-2 p-5', summary.mode === 'unanimous' || summary.mode === 'lone-dissent' ? 'border-emerald-500' : summary.mode === 'majority' ? 'border-amber-400' : 'border-rose-500']}>
+          <div class="flex flex-wrap items-baseline justify-between gap-3">
+            <p class="font-wide text-4xl font-semibold tracking-tight sm:text-5xl">{prettyLabel(summary.winner)}</p>
+            <p class="font-mono text-3xl font-semibold tabular-nums">{summary.score}</p>
+          </div>
+          <VoteStrip segments={summary.segments} colors={[...RANK_BG]} class="h-3 gap-1" segmentClass="rounded-sm" />
+          <p class="text-pretty text-zinc-700">{summary.headline}</p>
+          <ul role="list" class="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+            {summary.labels.map((l, i) => (
+              <li class:list={['font-medium', rankText(i)]}>{prettyLabel(l.label)}: {l.count}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <!-- Reviews -->
+      {reviews.length > 0 && summary && (
+        <section class="flex flex-col gap-5">
+          <h2 class="text-xl font-semibold tracking-tight">Reviews</h2>
+          <p class="-mt-3 max-w-[62ch] text-pretty text-zinc-600">Each model saw the full tally and got one sentence. Unedited.</p>
+          {reviews.map((m) => (
+            <ReviewComment slug={slug} fightTitle={`${title.replace(/`/g, '')}?`} model={m} winner={summary.winner} rank={m.rank} />
           ))}
-        </ol>
-      </div>
-    </details>
-  </section>
+        </section>
+      )}
 
-  {result && (
-    <section class="mb-16">
-      <h2 class="display text-3xl mb-5">Who said what</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {result.models.map((m: any) => <VoteCard model={m} />)}
-      </div>
-    </section>
-  )}
+      <!-- Files changed -->
+      {result && (
+        <section class="flex flex-col gap-4">
+          <h2 class="text-xl font-semibold tracking-tight">Files changed <span class="font-normal text-zinc-500">· the receipts</span></h2>
+          <Receipts models={result.models} slug={slug} />
+        </section>
+      )}
+    </div>
 
-  {result && (
-    <section class="mb-16">
-      <h2 class="display text-3xl md:text-4xl mb-2">The pundit panel.</h2>
-      <p class="text-base mb-6 max-w-2xl" style="color: var(--color-muted);">
-        I showed each model the full vote tally, then asked them to defend their choice and
-        dunk on whoever disagreed. Receipts attached.
-      </p>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {result.models.map((m: any) => <PunditCard model={m} />)}
-      </div>
-    </section>
-  )}
-
-  {result && (
-    <section class="mb-16">
-      <details class="accordion">
-        <summary>Show me the actual code ({result.totalRuns} samples)</summary>
-        <div class="pb-6">
-          <Receipts models={result.models} />
+    <!-- Sidebar -->
+    <aside class="flex flex-col gap-6 text-sm lg:sticky lg:top-6 lg:self-start">
+      {summary && result && (
+        <div class="flex flex-col gap-3">
+          <h2 class="font-semibold text-zinc-900">Reviewers</h2>
+          <ul role="list" class="flex flex-col gap-2.5">
+            {summary.segments.map((s) => {
+              const m = result.models.find((x) => x.id === s.modelId)!;
+              return (
+                <li>
+                  <a href={`#review-${s.modelId}`} class="flex items-center gap-2.5 hover:text-sky-700">
+                    <Avatar name={s.name} rank={s.rank} />
+                    <span class="flex-1 truncate">{m.displayName}</span>
+                    <span class:list={['font-mono', rankText(s.rank)]}>{prettyLabel(s.vote)}</span>
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
         </div>
-      </details>
-
-      <details class="accordion">
-        <summary>How I did this (the actual nerd shit)</summary>
-        <div class="pb-8 prose">
-          <p>
-            For each of {result.models.length} models I ran <strong>{fight.data.promptVariants.length} prompt variants</strong>
-            at <strong>two temperatures</strong> (0.0 and 0.7), <strong>10 runs each</strong> —
-            {result.totalRuns} code samples total, cost <strong>${result.totalCostUsd.toFixed(2)}</strong>.
-          </p>
-          <p>
-            Each output got fed through a <a href={'https://github.com/kmelve/petty-evals/blob/main/src/lib/eval/classifiers/regex.ts'}>fight-specific regex classifier</a>.
-            For <code>{fight.id}</code> the classifier looks for the specific signal in the output
-            (see the source — there's one function per fight, ~30 lines each).
-            When the signal is ambiguous, the classifier returns <code>'unknown'</code> rather than guess.
-          </p>
-          <p>
-            Each model's <strong>vote</strong> = its modal classification across 60 runs.
-            <strong>Confidence</strong> = Wilson 95% CI.
-            <strong>Verdict</strong> = majority across models (ties reported as ties).
-            <strong>Disagreement Index</strong> = normalized Shannon entropy of the vote distribution
-            (0 = unanimous, 1 = maximum chaos). Leaderboard sorts by this.
-          </p>
-          <p>
-            The pundit quotes come from a follow-up call after the votes are in — each model gets
-            the full tally and a per-model judgy prompt. I never edit the quotes.
-          </p>
-          <p>
-            Full walkthrough: <a href="/methodology">the methodology page</a>. Source: <a href="https://github.com/kmelve/petty-evals">GitHub</a>.
-          </p>
+      )}
+      <div class="flex flex-col gap-2 border-t border-zinc-200 pt-5">
+        <h2 class="font-semibold text-zinc-900">Labels</h2>
+        <p><span class="rounded-full bg-sky-50 px-2 py-0.5 text-sky-700 ring-1 ring-sky-600/20 ring-inset">{fight.data.category}</span></p>
+      </div>
+      {summary && (
+        <div class="flex flex-col gap-2 border-t border-zinc-200 pt-5">
+          <h2 class="font-semibold text-zinc-900">Status</h2>
+          <p class="text-zinc-600">{prStatus(summary.mode).label}. Disagreement index {result!.verdict.disagreementIndex.toFixed(2)} (0 = unanimous, 1 = chaos).</p>
+          <a href="/methodology" class="font-medium text-sky-700 hover:underline">How this is measured</a>
         </div>
-      </details>
-    </section>
-  )}
+      )}
+    </aside>
+  </div>
 
-  <section class="my-16 chunky chunky--coral p-8 md:p-10">
-    <div class="display text-3xl md:text-4xl mb-3">Got a pettier debate?</div>
-    <p class="text-lg mb-5 max-w-xl">
-      Open a PR with a new fight. I'll run it across all four models, write up the verdict,
-      and add your name to the byline.
-    </p>
-    <a href="https://github.com/kmelve/petty-evals/blob/main/CONTRIBUTING.md" class="sticker">
-      Submit via PR →
-    </a>
-  </section>
+  <script>
+    // "Copy link" on review comments: copy the permalink, fall back to following the anchor.
+    document.addEventListener('click', async (event) => {
+      const link = (event.target as HTMLElement).closest<HTMLAnchorElement>('a[data-copy]');
+      if (!link || !navigator.clipboard) return;
+      event.preventDefault();
+      try {
+        await navigator.clipboard.writeText(link.dataset.copy!);
+        const original = link.textContent;
+        link.textContent = 'Copied';
+        setTimeout(() => (link.textContent = original), 1500);
+      } catch {
+        window.location.hash = link.hash;
+      }
+    });
+  </script>
 </Base>

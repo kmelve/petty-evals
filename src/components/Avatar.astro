@@ -1,0 +1,21 @@
+---
+// Reviewer avatar: initials on the color of the side the model voted for.
+import { initials, rankBg } from '../lib/site/review.ts';
+
+interface Props {
+  name: string;
+  rank: number;
+  size?: 'sm' | 'lg';
+  title?: string;
+}
+const { name, rank, size = 'sm', title } = Astro.props;
+---
+<span
+  class:list={[
+    'flex shrink-0 items-center justify-center rounded-full font-mono font-semibold text-white ring-2 ring-white',
+    rankBg(rank),
+    size === 'sm' ? 'size-7 text-[0.625rem]' : 'size-10 text-sm',
+  ]}
+  title={title ?? name}
+  aria-hidden="true"
+>{initials(name)}</span>

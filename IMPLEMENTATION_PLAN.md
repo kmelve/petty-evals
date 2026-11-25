@@ -13,13 +13,13 @@
 **Status**: Complete
 
 ## Stage 3: Look and feel
-**Goal**: New visual direction chosen by Knut from in-browser variants (ui.sh picker), applied site-wide. Site copy driven by data (panel size, run counts) instead of hardcoded numbers.
+**Goal**: New visual direction chosen by Knut from in-browser variants (ui.sh picker), applied site-wide. Picked: Code review (each fight is a PR, models are reviewers). Site copy driven by data (panel size, run counts) instead of hardcoded numbers.
 **Success Criteria**: `pnpm build` and `pnpm check` pass; homepage + fight page render with both old 4-model and new N-model result files.
 **Tests**: build + check; visual check on desktop and mobile.
-**Status**: In Progress
+**Status**: Complete
 
 ## Stage 4: Shareability
 **Goal**: Things people screenshot and post: OG cards with the split and the best dunk, per-quote share links, a cross-fight "beef" view (who disagrees with whom).
 **Success Criteria**: Each fight's OG image shows verdict, split bar and a quote; quotes have permalinks + share intents.
 **Tests**: build generates OG PNGs for every fight; beef matrix computation unit-tested.
-**Status**: Not Started
+**Status**: In Progress
