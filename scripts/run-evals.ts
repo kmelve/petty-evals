@@ -5,7 +5,7 @@
 //   pnpm evals --fight=<slug>                  # full run (10 runs × 3 variants × 2 temps × N models)
 //   pnpm evals --fight=all --dry-run           # plan + cost estimate for every fight
 //   pnpm evals --fight=<slug> --dry-run        # plan only, no API calls
-//   pnpm evals --fight=<slug> --smoke          # 1 run × 1 variant × 1 temp × N models (smoke test)
+//   pnpm evals --fight=<slug> --smoke          # 1 run × 1 variant × 1 temp × N models; prints, never writes
 //   pnpm evals --fight=<slug> --runs=5 --variants=1 --temps=1
 //
 // Flags:
@@ -111,14 +111,26 @@ async function main() {
 
   let estimated = 0;
   let spent = 0;
+  const failed: string[] = [];
   for (const slug of slugs) {
-    const outcome = await runOne(slug, args, models, pricing);
-    estimated += outcome.estCostUsd;
-    spent += outcome.spentUsd;
+    try {
+      const outcome = await runOne(slug, args, models, pricing);
+      estimated += outcome.estCostUsd;
+      spent += outcome.spentUsd;
+    } catch (err) {
+      // In batch mode one bad fight shouldn't throw away the rest of the run.
+      if (slugs.length === 1) throw err;
+      failed.push(slug);
+      console.error(`FAILED ${slug}: ${(err as Error).message}\n`);
+    }
   }
   if (slugs.length > 1) {
     console.log('═'.repeat(60));
-    console.log(`${slugs.length} fights. Estimated: $${estimated.toFixed(2)}. Spent: $${spent.toFixed(2)}.`);
+    console.log(`${slugs.length} fights. Estimated: $${estimated.toFixed(2)}. Spent on generations: $${spent.toFixed(2)}.`);
+    if (failed.length) {
+      console.log(`Failed (${failed.length}): ${failed.join(', ')}`);
+      process.exitCode = 1;
+    }
   }
 }
 
@@ -230,10 +242,15 @@ async function runOne(
     else console.warn(`Pundit skipped for ${modelId}: ${outcome.skipped}`);
   });
 
-  const outDir = path.resolve(process.cwd(), 'src/data/results');
-  await mkdir(outDir, { recursive: true });
-  const file = await writeReport(result, outDir);
-  console.log(`\nWrote ${file}`);
+  if (args.smoke) {
+    // A smoke run is one sample per model; never let it replace a real result file.
+    console.log('\n--smoke: result not written.');
+  } else {
+    const outDir = path.resolve(process.cwd(), 'src/data/results');
+    await mkdir(outDir, { recursive: true });
+    const file = await writeReport(result, outDir);
+    console.log(`\nWrote ${file}`);
+  }
   console.log(`Verdict: ${result.verdict.winner} (${JSON.stringify(result.verdict.tally)})`);
   console.log(`Disagreement Index: ${result.verdict.disagreementIndex.toFixed(3)}`);
   console.log(`Total cost: $${result.totalCostUsd.toFixed(4)}`);

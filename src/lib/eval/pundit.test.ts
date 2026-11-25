@@ -92,3 +92,8 @@ test('buildPunditPrompt: unknown self id throws', () => {
 test('cleanQuote: strips wrapping straight and curly quotes', () => {
   assert.equal(cleanQuote('  “Tabs are for tables.”\n'), 'Tabs are for tables.');
 });
+
+test('cleanQuote: keeps a closing quote that belongs to an inner quotation', () => {
+  const q = 'Tabs just means you called it "personal preference."';
+  assert.equal(cleanQuote(q), q);
+});

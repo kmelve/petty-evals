@@ -65,3 +65,21 @@ test('panelFromResult: old results without shortName fall back to displayName', 
   });
   assert.equal(panel[0].name, 'GPT-5.4');
 });
+
+test('summarizeRuns: abstentions are not votes', () => {
+  const runs = [...Array(33)].map(() => run('x', 'unknown')).concat([...Array(27)].map(() => run('x', 'short')));
+  const s = summarizeRuns(runs);
+  assert.equal(s.vote, 'short');
+  assert.equal(s.confidence, 1);
+  assert.equal(s.voteDistribution.unknown, 33);
+});
+
+test('summarizeRuns: all abstentions vote unknown', () => {
+  const s = summarizeRuns([run('x', 'unknown'), run('x', 'unknown')]);
+  assert.equal(s.vote, 'unknown');
+});
+
+test('summarizeRuns: confidence counts only readable runs', () => {
+  const s = summarizeRuns([run('x', 'a'), run('x', 'a'), run('x', 'b'), run('x', 'unknown')]);
+  assert.equal(s.confidence, 2 / 3);
+});

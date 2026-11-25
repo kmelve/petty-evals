@@ -21,13 +21,22 @@ export function modalVote(dist: Record<string, number>): string {
   return best;
 }
 
-/** Recompute vote, distribution and confidence for one model from its runs. */
+/**
+ * Recompute vote, distribution and confidence for one model from its runs.
+ *
+ * 'unknown' means the classifier abstained (e.g. the code never contained an
+ * array literal), so it is not a vote. The model's vote is its most common
+ * readable label, and confidence is measured over readable runs only. A model
+ * only votes 'unknown' when none of its runs were readable. The full
+ * distribution, abstentions included, stays in voteDistribution.
+ */
 export function summarizeRuns(runs: RunRecord[]): Pick<ModelResult, 'vote' | 'voteDistribution' | 'confidence' | 'confidenceCI95'> {
   const dist: Record<string, number> = {};
   for (const r of runs) dist[r.classification] = (dist[r.classification] ?? 0) + 1;
-  const vote = modalVote(dist);
-  const successes = dist[vote] ?? 0;
-  const total = runs.length;
+  const readable = Object.fromEntries(Object.entries(dist).filter(([label]) => label !== 'unknown'));
+  const vote = modalVote(readable);
+  const successes = vote === 'unknown' ? (dist.unknown ?? 0) : dist[vote];
+  const total = vote === 'unknown' ? runs.length : runs.length - (dist.unknown ?? 0);
   return {
     vote,
     voteDistribution: dist,

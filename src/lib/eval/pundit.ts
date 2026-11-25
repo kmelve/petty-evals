@@ -52,10 +52,14 @@ export function classifyMode(modelVotes: Record<string, string>): VerdictMode {
 function describeMember(m: PanelMember): string {
   const weights = m.openWeights ? 'open weights' : 'closed';
   const dist = Object.entries(m.voteDistribution)
+    .filter(([k]) => k !== 'unknown')
     .sort((a, b) => b[1] - a[1])
     .map(([k, v]) => `${v} ${k}`)
     .join(', ');
-  return `  - ${m.name} (${m.lab}, ${weights}) voted ${m.vote.toUpperCase()} (${dist})`;
+  // Abstentions are runs where the code never touched the contested choice. Not a vote, not dunk material.
+  const abstained = m.voteDistribution.unknown ? `; ${m.voteDistribution.unknown} runs didn't touch the question` : '';
+  const vote = m.vote === 'unknown' ? 'NOTHING CLASSIFIABLE' : m.vote.toUpperCase();
+  return `  - ${m.name} (${m.lab}, ${weights}) voted ${vote} (${dist || 'no readable runs'}${abstained})`;
 }
 
 function namesList(members: PanelMember[]): string {
@@ -140,9 +144,11 @@ export function pickRepresentativeSample(runs: RunRecord[], modalVote: string): 
   return (matching ?? runs[0])?.output ?? '';
 }
 
-/** Strip wrapping quotes and stray whitespace from a pundit reply. */
+/** Strip a matching pair of wrapping quotes, never a quote that closes a quotation inside the sentence. */
 export function cleanQuote(text: string): string {
-  return text.trim().replace(/^["'“”]+|["'“”]+$/g, '').trim();
+  const t = text.trim();
+  const wrapped = /^["“]/.test(t) && /["”]$/.test(t) && (t.match(/["“”]/g) ?? []).length === 2;
+  return (wrapped ? t.slice(1, -1) : t).trim();
 }
 
 export async function callPundit(model: ModelConfig, prompt: string): Promise<string> {
