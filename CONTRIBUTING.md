@@ -43,14 +43,19 @@ and follow the existing pattern.
 After the maintainer merges your PR, they run:
 
 ```bash
-pnpm evals --fight=<your-slug>
+pnpm evals --fight=<your-slug> --smoke   # one call per model, prints only
+pnpm evals --fight=<your-slug>           # the real thing, ~$3 via OpenRouter
 ```
 
-This writes `src/data/results/<your-slug>.json` and commits it. Your fight
-appears on the leaderboard within one site rebuild.
+This writes `src/data/results/<your-slug>.json`. Your fight shows up as a new
+argument on the homepage, with its own share card, on the next deploy.
+
+Want to run it yourself first? You need one OpenRouter key in `.env`
+(`OPENROUTER_API_KEY`); see `.env.example`.
 
 ## Style
 
-The site voice is deadpan academic. No emoji, no winks, no "lol". Questions
-are framed neutrally. Categories are short lowercase nouns. Prompts request
-realistic coding tasks, not contrived constructions.
+Questions are framed neutrally. Prompts request realistic coding tasks and
+never mention the contested choice: we measure what models do, not what they
+say. Categories are short lowercase nouns. The jokes come from the models; the
+fight definition stays straight-faced.

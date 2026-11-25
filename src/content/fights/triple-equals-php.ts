@@ -11,6 +11,10 @@ export const fight: Fight = {
     'Write a PHP function `isAdmin($user)` that takes a user object and returns true if the user has the admin role.',
   ],
   classifier: { type: 'regex', pattern: 'triple-equals-php' },
+  sides: [
+    { label: "triple-equals", name: "===" },
+    { label: "double-equals", name: "==" },
+  ],
   submittedBy: 'petty-evals-team',
   dateAdded: '2026-06-04',
 };

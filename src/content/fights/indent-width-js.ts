@@ -11,6 +11,11 @@ export const fight: Fight = {
     'Write a JavaScript function that retries a callback up to N times if it throws.',
   ],
   classifier: { type: 'regex', pattern: 'indent-width-js' },
+  sides: [
+    { label: "two-space", name: "2 spaces" },
+    { label: "four-space", name: "4 spaces" },
+    { label: "tabs", name: "tabs" },
+  ],
   submittedBy: 'petty-evals-team',
   dateAdded: '2026-06-03',
 };

@@ -11,6 +11,12 @@ export const fight: Fight = {
     'Show the shell commands to install TypeScript as a dev dependency and print its version.',
   ],
   classifier: { type: 'regex', pattern: 'package-manager' },
+  sides: [
+    { label: "pnpm", name: "pnpm" },
+    { label: "npm", name: "npm" },
+    { label: "yarn", name: "yarn" },
+    { label: "bun", name: "bun" },
+  ],
   submittedBy: 'petty-evals-team',
   dateAdded: '2026-06-03',
 };

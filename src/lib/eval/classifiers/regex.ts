@@ -611,6 +611,170 @@ const arrowFnVsClosurePhp: RegexClassifier = (output) => {
   return arrowCount > closureCount ? 'arrow' : 'closure';
 };
 
+// --- 29. default-vs-named-exports --------------------------------------------
+
+const defaultVsNamedExports: RegexClassifier = (output) => {
+  const code = stripJsNoise(extractAllCode(output));
+  const defaults = (code.match(/\bexport\s+default\b/g) ?? []).length;
+  // Value exports only: exported types and interfaces don't say anything about the module's API style.
+  const named =
+    (code.match(/\bexport\s+(?:async\s+)?(?:function\*?|const|let|var|class)\s+\w/g) ?? []).length +
+    (code.match(/\bexport\s*\{[^}]+\}/g) ?? []).filter((m) => !/\bdefault\b/.test(m)).length;
+  if (defaults === 0 && named === 0) return 'unknown';
+  if (defaults > 0 && named > 0) return 'mixed';
+  return defaults > 0 ? 'default' : 'named';
+};
+
+// --- 30. foreach-vs-for-of ---------------------------------------------------
+
+const foreachVsForOf: RegexClassifier = (output) => {
+  const code = stripJsNoise(extractAllCode(output));
+  const counts: Array<[string, number]> = [
+    ['foreach', (code.match(/\.forEach\s*\(/g) ?? []).length],
+    ['for-of', (code.match(/\bfor\s*(?:await\s*)?\(\s*(?:const|let|var)\s+[^;)]+?\s+of\s+/g) ?? []).length],
+    ['for-index', (code.match(/\bfor\s*\(\s*(?:let|var)\s+\w+\s*=\s*[^;]+;[^;]+;[^)]+\)/g) ?? []).length],
+  ];
+  counts.sort((a, b) => b[1] - a[1]);
+  if (counts[0][1] === 0) return 'unknown';
+  if (counts[0][1] === counts[1][1]) return 'mixed';
+  return counts[0][0];
+};
+
+// --- 31. enum-vs-union -------------------------------------------------------
+
+const enumVsUnion: RegexClassifier = (output) => {
+  const code = extractAllCode(output);
+  const hasEnum = /\b(?:const\s+)?enum\s+\w+\s*\{/.test(code);
+  const hasUnion = /\btype\s+\w+\s*=\s*\|?\s*['"][^'"\n]+['"]\s*\|/.test(code);
+  const hasAsConst = /\}\s*as\s+const\b/.test(code) || /\]\s*as\s+const\b/.test(code);
+  if (!hasEnum && !hasUnion && !hasAsConst) return 'unknown';
+  if (hasEnum && (hasUnion || hasAsConst)) return 'mixed';
+  if (hasEnum) return 'enum';
+  // An `as const` object usually comes with a derived union type; the object is the choice.
+  if (hasAsConst) return 'as-const';
+  return 'union';
+};
+
+// --- 32. catch-param-name ----------------------------------------------------
+
+const catchParamName: RegexClassifier = (output) => {
+  const code = stripJsNoise(extractAllCode(output));
+  const counts: Record<string, number> = {};
+  for (const m of code.matchAll(/\bcatch\s*(\(\s*(\w+)\s*(?::\s*\w+)?\s*\)|\{)/g)) {
+    const name = m[2] ?? '';
+    const label = m[1] === '{' ? 'no-binding' : name === 'e' || name === 'err' || name === 'error' ? name : 'other';
+    counts[label] = (counts[label] ?? 0) + 1;
+  }
+  const ranked = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  if (ranked.length === 0) return 'unknown';
+  if (ranked.length > 1 && ranked[0][1] === ranked[1][1]) return 'mixed';
+  return ranked[0][0];
+};
+
+// --- 33. jsx-conditional -----------------------------------------------------
+
+const jsxConditional: RegexClassifier = (output) => {
+  const code = stripJsNoise(extractAllCode(output));
+  const and = (code.match(/&&\s*\(?\s*<[A-Za-z]/g) ?? []).length;
+  const ternary = (code.match(/\?\s*\(?\s*<[A-Za-z]/g) ?? []).length;
+  const earlyReturn = /\bif\s*\([^)]*\)\s*\{?\s*return\s+null\b/.test(code);
+  if (and === 0 && ternary === 0) return earlyReturn ? 'early-return' : 'unknown';
+  if (and === ternary) return 'mixed';
+  return and > ternary ? 'and' : 'ternary';
+};
+
+// --- 34. grid-vs-flexbox -----------------------------------------------------
+
+const gridVsFlexbox: RegexClassifier = (output) => {
+  const code = extractAllCode(output);
+  // The layout container is the question. Flex inside a grid card is normal, so grid wins when it's present.
+  const grid = /display\s*:\s*grid\b/.test(code) || /grid-template-columns\s*:/.test(code) || /\bgrid-cols-\d/.test(code);
+  const flex = /display\s*:\s*flex\b/.test(code) || /\bflex-wrap\b|\bflex\s+flex-wrap\b/.test(code) || /class(?:Name)?="[^"]*\bflex\b/.test(code);
+  if (grid) return 'grid';
+  if (flex) return 'flexbox';
+  return 'unknown';
+};
+
+// --- 35. px-vs-rem -----------------------------------------------------------
+
+const pxVsRem: RegexClassifier = (output) => {
+  const code = extractAllCode(output).replace(/@media[^{]*\{/g, '{');
+  const counts: Record<string, number> = { 'px': 0, 'rem': 0, 'em': 0 };
+  const declarations = code.matchAll(/(?:^|[;{\s])(font-size|padding(?:-[a-z]+)?|margin(?:-[a-z]+)?|gap|row-gap|column-gap)\s*:\s*([^;}\n]+)/g);
+  for (const [, , value] of declarations) {
+    for (const unit of value.matchAll(/(?<![\w.])\d*\.?\d+(px|rem|em)\b/g)) {
+      // 0px and 1px are hairline values, not a sizing philosophy.
+      if (unit[1] === 'px' && /^(?:0|1)px$/.test(unit[0])) continue;
+      counts[unit[1]]++;
+    }
+  }
+  const ranked = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  if (ranked[0][1] === 0) return 'unknown';
+  if (ranked[0][1] === ranked[1][1]) return 'mixed';
+  return ranked[0][0];
+};
+
+// --- 36. conventional-commits ------------------------------------------------
+
+const CONVENTIONAL = /^(feat|fix|chore|docs|refactor|test|tests|style|perf|build|ci|revert)(\([^)]*\))?!?:\s+\S/i;
+const GITMOJI = /^(:[a-z0-9_+-]+:|\p{Extended_Pictographic})/u;
+
+function commitSubject(output: string): string | null {
+  const fence = output.match(/```[\w-]*\n([\s\S]*?)```/);
+  const source = fence ? fence[1] : output;
+  for (const raw of source.split('\n')) {
+    const line = raw.replace(/^\s*(?:git commit -m\s*)?["'`>*-]*\s*/, '').trim();
+    if (!line) continue;
+    if (!fence && /^(here'?s|here is|commit message|suggested|option)\b/i.test(line)) continue;
+    return line;
+  }
+  return null;
+}
+
+const conventionalCommits: RegexClassifier = (output) => {
+  const subject = commitSubject(output);
+  if (!subject) return 'unknown';
+  if (GITMOJI.test(subject)) return 'gitmoji';
+  if (CONVENTIONAL.test(subject)) return 'conventional';
+  return 'plain';
+};
+
+// --- 37. json-key-case -------------------------------------------------------
+
+const jsonKeyCase: RegexClassifier = (output) => {
+  const code = extractAllCode(output);
+  let camel = 0;
+  let snake = 0;
+  for (const [, key] of code.matchAll(/"([A-Za-z][A-Za-z0-9_]*)"\s*:/g)) {
+    if (/[a-z][A-Z]/.test(key)) camel++;
+    else if (/[a-z]_[a-z]/.test(key)) snake++;
+  }
+  // Single-word keys ("id", "email") don't vote.
+  if (camel + snake < 2) return 'unknown';
+  if (camel / (camel + snake) >= 0.75) return 'camelCase';
+  if (snake / (camel + snake) >= 0.75) return 'snake_case';
+  return 'mixed';
+};
+
+// --- 38. rich-text-shape -----------------------------------------------------
+
+// `text` is left out on purpose: it's the leaf field inside blocks (`{ text: string; bold?: boolean }`).
+const RICH_FIELD = '(?:body|content|description|longDescription|long_description)';
+
+const richTextShape: RegexClassifier = (output) => {
+  const code = extractAllCode(output);
+  const asString =
+    new RegExp(`\\b${RICH_FIELD}\\??\\s*:\\s*string\\b`).test(code) ||
+    new RegExp(`"${RICH_FIELD}"\\s*:\\s*\\{[^{}]*"type"\\s*:\\s*"string"`).test(code);
+  const asStructure =
+    new RegExp(`\\b${RICH_FIELD}\\??\\s*:\\s*(?:\\w*(?:Block|Node|Element|Section|Paragraph|Content|Span)\\w*\\[\\]|Array<|ReadonlyArray<)`).test(code) ||
+    new RegExp(`"${RICH_FIELD}"\\s*:\\s*\\{[^{}]*"type"\\s*:\\s*"(?:array|object)"`).test(code);
+  // Structured models still have string leaves (a span's `content: string`), so any block-shaped rich field decides it.
+  if (asStructure) return 'structured';
+  if (asString) return 'string';
+  return 'unknown';
+};
+
 // --- registry ---------------------------------------------------------------
 
 export const regexClassifiers: Record<string, RegexClassifier> = {
@@ -642,6 +806,16 @@ export const regexClassifiers: Record<string, RegexClassifier> = {
   'array-syntax-php': arraySyntaxPhp,
   'triple-equals-php': tripleEqualsPhp,
   'arrow-fn-vs-closure-php': arrowFnVsClosurePhp,
+  'default-vs-named-exports': defaultVsNamedExports,
+  'foreach-vs-for-of': foreachVsForOf,
+  'enum-vs-union': enumVsUnion,
+  'catch-param-name': catchParamName,
+  'jsx-conditional': jsxConditional,
+  'grid-vs-flexbox': gridVsFlexbox,
+  'px-vs-rem': pxVsRem,
+  'conventional-commits': conventionalCommits,
+  'json-key-case': jsonKeyCase,
+  'rich-text-shape': richTextShape,
 };
 
 export function classifyWithRegex(pattern: string, output: string): Label {

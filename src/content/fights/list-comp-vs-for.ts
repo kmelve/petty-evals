@@ -11,6 +11,10 @@ export const fight: Fight = {
     'Write a Python function that takes a list of strings and returns a new list with each string lowercased and stripped.',
   ],
   classifier: { type: 'regex', pattern: 'list-comp-vs-for' },
+  sides: [
+    { label: "comprehension", name: "list comprehensions" },
+    { label: "for-loop", name: "for loops" },
+  ],
   submittedBy: 'petty-evals-team',
   dateAdded: '2026-06-03',
 };

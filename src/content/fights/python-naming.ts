@@ -11,6 +11,10 @@ export const fight: Fight = {
     'Write a Python function that builds a small HTTP request signature from a URL, a method, and an API key.',
   ],
   classifier: { type: 'regex', pattern: 'python-naming' },
+  sides: [
+    { label: "snake_case", name: "snake_case" },
+    { label: "camelCase", name: "camelCase" },
+  ],
   submittedBy: 'petty-evals-team',
   dateAdded: '2026-06-03',
 };

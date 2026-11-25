@@ -26,7 +26,7 @@ generation, we apply the classifier and record:
 - the classification label
 - input / output token counts
 - wall-clock latency
-- USD cost (computed from the per-provider pricing table)
+- USD cost (billed cost reported by OpenRouter usage accounting)
 
 After all runs complete, we ask each model **once** for a one-sentence reaction
 to the full vote tally — that's the pundit panel.
@@ -43,30 +43,43 @@ to the full vote tally — that's the pundit panel.
   30-output human-labeled subsample (computed offline, written into the result
   JSON as `classifierKappa`).
 
-All three live in `stats.ts` with inline `node:test` unit tests:
+All three live in `stats.ts`. Unit tests (`node:test`) sit next to each module:
 
 ```
-pnpm test:stats
+pnpm test
 ```
 
 ## Running the pipeline
 
 ```
-# Dry run — prints the plan and estimated cost, makes no API calls
+# Dry run — prints the plan and an estimate from live OpenRouter pricing. No key needed.
 pnpm evals --fight=tabs-vs-spaces-python --dry-run
+pnpm evals --fight=all --dry-run
 
-# Real run — requires API keys in env
-ANTHROPIC_DEV_API_KEY=... OPENAI_API_KEY=... GOOGLE_GENERATIVE_AI_API_KEY=... \
-  pnpm evals --fight=tabs-vs-spaces-python
+# Smoke test — one call per model, checks the key and every model id
+pnpm evals --fight=tabs-vs-spaces-python --smoke
+
+# Real run — needs OPENROUTER_API_KEY in .env or the shell
+pnpm evals --fight=tabs-vs-spaces-python
+pnpm evals --fight=all
 ```
+
+If more than half the calls for a fight fail, the runner refuses to write the
+result file, so a bad key or a retired model id can't clobber good data.
 
 The runner writes `src/data/results/<slug>.json`. Commit that file. The Astro
 site rebuilds and serves the new verdict.
 
 ## Adding a model
 
-Edit `providers/index.ts`. Set `enabled: true`, supply pricing, ensure the
-provider client has an env-var-backed key. The runner picks it up on next run.
+Every model goes through OpenRouter, so adding one is a single entry in
+`providers/index.ts`: an OpenRouter slug, a display name, and a `shortName`
+the other pundits will use when they dunk on it. No pricing table: dry runs use
+live prices from OpenRouter's public `/models` endpoint and real runs record the
+billed cost.
+
+`pnpm models:popular` lists OpenRouter's most-used programming models and marks
+which ones are on the panel. Start there when the roster feels stale.
 
 ## Adding a classifier
 

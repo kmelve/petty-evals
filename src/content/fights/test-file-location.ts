@@ -11,6 +11,10 @@ export const fight: Fight = {
     'Show the directory tree for a React component library called `bits` with three components (Button, Card, Modal) and tests.',
   ],
   classifier: { type: 'regex', pattern: 'test-file-location' },
+  sides: [
+    { label: "colocated", name: "tests next to the code" },
+    { label: "tests-folder", name: "a tests folder" },
+  ],
   submittedBy: 'petty-evals-team',
   dateAdded: '2026-06-03',
 };

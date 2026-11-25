@@ -11,6 +11,10 @@ export const fight: Fight = {
     'Write a PHP function `slugify($string)` that converts a title into a URL-safe slug.',
   ],
   classifier: { type: 'regex', pattern: 'tabs-vs-spaces-php' },
+  sides: [
+    { label: "spaces", name: "spaces" },
+    { label: "tabs", name: "tabs" },
+  ],
   submittedBy: 'petty-evals-team',
   dateAdded: '2026-06-04',
 };

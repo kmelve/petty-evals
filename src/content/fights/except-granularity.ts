@@ -11,6 +11,10 @@ export const fight: Fight = {
     'Write a Python function that fetches a URL with `urllib.request` and returns the body, returning None on failure.',
   ],
   classifier: { type: 'regex', pattern: 'except-granularity' },
+  sides: [
+    { label: "narrow", name: "narrow excepts" },
+    { label: "broad", name: "broad excepts" },
+  ],
   submittedBy: 'petty-evals-team',
   dateAdded: '2026-06-03',
 };

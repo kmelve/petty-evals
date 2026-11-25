@@ -1,0 +1,118 @@
+---
+// The page a reader lands on after picking a side, and the URL they share.
+import Base from '../../../layouts/Base.astro';
+import Avatar from '../../../components/Avatar.astro';
+import InlineCode from '../../../components/InlineCode.astro';
+import { allSidePages, type SidePage } from '../../../lib/site/side-pages.ts';
+import { modelName } from '../../../lib/site/fight-summary.ts';
+
+export async function getStaticPaths() {
+  return (await allSidePages()).map((page) => ({ params: { slug: page.slug, side: page.side }, props: { page } }));
+}
+
+const { page } = Astro.props as { page: SidePage };
+const { fight, result, verdict: v, slug, url } = page;
+const title = fight.data.title.replace(/[?.]$/, '');
+const x = `https://x.com/intent/post?${new URLSearchParams({ text: v.shareText, url })}`;
+const bluesky = `https://bsky.app/intent/compose?${new URLSearchParams({ text: `${v.shareText} ${url}` })}`;
+const quoteFor = (id: string) => result.models.find((m) => m.id === id)?.punditQuote ?? null;
+const otherSides = fight.data.sides.filter((s: { label: string }) => s.label !== page.side);
+const tone = {
+  agree: { pill: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20', label: 'On the winning side' },
+  against: { pill: 'bg-rose-50 text-rose-700 ring-rose-600/20', label: 'Overruled' },
+  split: { pill: 'bg-amber-50 text-amber-800 ring-amber-600/25', label: 'Merge conflict' },
+}[v.tone];
+const columns = [
+  { heading: v.withMe.length ? `On your side (${v.withMe.length})` : 'On your side', models: v.withMe, rank: 0, empty: 'Nobody. Not one model.' },
+  { heading: `Against you (${v.against.length})`, models: v.against, rank: 2, empty: 'Nobody. Enjoy it.' },
+];
+---
+<Base
+  title={`${v.shareText.replace(/`/g, '')} · Petty Evals`}
+  description={`${title.replace(/`/g, '')}? See how ${result.models.length} AI coding models voted.`}
+  ogImage={`/og/${slug}/${page.side}.png`}
+>
+  <div class="flex flex-col gap-10">
+    <div class="flex flex-col gap-5">
+      <a href={`/fights/${slug}`} class="w-fit text-sm font-medium text-zinc-600 hover:text-zinc-950">← <InlineCode text={title} />?</a>
+      <span class:list={['w-fit rounded-full px-2.5 py-1 text-sm font-medium ring-1 ring-inset', tone.pill]}>{tone.label}</span>
+      <div class="flex flex-col gap-2">
+        <p class="text-2xl font-semibold tracking-tight text-balance text-zinc-500 sm:text-3xl">{v.kicker}</p>
+        <h1 class:list={['font-wide text-6xl tracking-tight text-balance sm:text-7xl', v.isCode ? 'font-mono font-medium' : 'font-semibold']}>{v.headline}</h1>
+      </div>
+    </div>
+
+    <section class="flex flex-col gap-4" aria-labelledby="share-heading">
+      <h2 id="share-heading" class="text-lg font-semibold tracking-tight">Tell everyone</h2>
+      <img
+        src={`/og/${slug}/${page.side}.png`}
+        alt={`${v.kicker} ${v.headline} ${v.footer}`}
+        width="1200"
+        height="630"
+        class="w-full max-w-3xl rounded-lg border border-zinc-200"
+      />
+      <div class="flex flex-wrap items-center gap-3">
+        <a href={x} target="_blank" rel="noopener" data-share="x" class="rounded-md bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-zinc-700">Post on X</a>
+        <a href={bluesky} target="_blank" rel="noopener" data-share="bluesky" class="rounded-md bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-zinc-700">Post on Bluesky</a>
+        <button type="button" data-copy={url} data-share="copy" class="rounded-md border border-zinc-300 px-4 py-2.5 text-sm font-medium hover:bg-zinc-50">Copy link</button>
+      </div>
+    </section>
+
+    <section class="grid gap-8 md:grid-cols-2">
+      {columns.map((col) => (
+        <div class="flex min-w-0 flex-col gap-3">
+          <h2 class="text-lg font-semibold tracking-tight">{col.heading}</h2>
+          {col.models.length === 0 ? (
+            <p class="text-zinc-600">{col.empty}</p>
+          ) : (
+            <ul role="list" class="flex flex-col gap-3">
+              {col.models.map((m) => {
+                const full = result.models.find((r) => r.id === m.id)!;
+                const quote = quoteFor(m.id);
+                return (
+                  <li class="flex gap-3 rounded-lg border border-zinc-200 p-4">
+                    <Avatar name={modelName(full)} rank={col.rank} />
+                    <div class="flex min-w-0 flex-col gap-1">
+                      <p class="text-sm font-semibold">{full.displayName}</p>
+                      {quote && <p class="text-pretty text-zinc-700"><InlineCode text={quote} /></p>}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      ))}
+    </section>
+
+    <section class="flex flex-col gap-3 border-t border-zinc-200 pt-8">
+      <h2 class="text-lg font-semibold tracking-tight">Changed your mind?</h2>
+      <div class="flex flex-wrap items-center gap-3">
+        {otherSides.map((s: { label: string; name: string }) => (
+          <a href={`/fights/${slug}/${s.label}`} class="rounded-md border border-zinc-300 px-4 py-2.5 text-sm font-medium hover:bg-zinc-50">I pick <span class:list={[/[^A-Za-z0-9 '-]/.test(s.name) && 'font-mono']}>{s.name}</span></a>
+        ))}
+        <a href={`/fights/${slug}`} class="text-sm font-medium text-sky-700 hover:underline">See the whole fight →</a>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // Copy link + share click tracking (Vercel Web Analytics custom events, when enabled).
+    document.addEventListener('click', async (event) => {
+      const el = (event.target as HTMLElement).closest<HTMLElement>('[data-share]');
+      if (!el) return;
+      const va = (window as unknown as { va?: (e: string, d: unknown) => void }).va;
+      va?.('event', { name: 'share', data: { network: el.dataset.share, path: location.pathname } });
+      if (el.dataset.copy && navigator.clipboard) {
+        try {
+          await navigator.clipboard.writeText(el.dataset.copy);
+          const original = el.textContent;
+          el.textContent = 'Copied';
+          setTimeout(() => (el.textContent = original), 1500);
+        } catch {
+          // Clipboard refused: the URL is in the address bar anyway.
+        }
+      }
+    });
+  </script>
+</Base>

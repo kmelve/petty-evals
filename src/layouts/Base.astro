@@ -1,59 +1,106 @@
 ---
 import '../styles/global.css';
+import { getCollection } from 'astro:content';
+import { numberWord } from '../lib/site/fight-summary.ts';
 
 interface Props {
   title: string;
   description?: string;
   ogImage?: string;
 }
+// Default description reads the real panel size and sample count from the results.
+const results = (await getCollection('results')).map((r) => r.data);
+const panelSize = Math.max(0, ...results.map((r) => r.models.length));
+const samples = results.reduce((sum, r) => sum + r.totalRuns, 0);
+const PanelWord = numberWord(panelSize).charAt(0).toUpperCase() + numberWord(panelSize).slice(1);
+
 const {
   title,
-  description = "I made four AI models fight about petty dev debates. They mostly agree, which is also a finding.",
-  ogImage,
+  description = `${PanelWord} AI coding models wrote ${samples.toLocaleString('en-US')} code samples so we can finally settle tabs vs. spaces. Then they reviewed each other's choices.`,
+  ogImage = '/og/home.png',
 } = Astro.props;
+
+const site = Astro.site ?? new URL('https://petty-evals.dev');
+const ogUrl = new URL(ogImage, site).href;
+const canonical = new URL(Astro.url.pathname, site).href;
+const path = Astro.url.pathname;
+const tabs = [
+  { href: '/', label: 'Fights', active: path === '/' || path.startsWith('/fights') },
+  { href: '/beef', label: 'Beef', active: path.startsWith('/beef') },
+  { href: '/methodology', label: 'Methodology', active: path.startsWith('/methodology') },
+];
 ---
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="antialiased">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400..700&family=Mona+Sans:wdth,wght@75..125,200..900&display=swap" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Petty Evals" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    {ogImage && <meta property="og:image" content={ogImage} />}
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogUrl} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
-    {ogImage && <meta name="twitter:image" content={ogImage} />}
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogUrl} />
   </head>
-  <body class="min-h-screen flex flex-col">
-    <header class="px-6 md:px-10 py-5">
-      <div class="mx-auto max-w-5xl flex items-center justify-between">
-        <a href="/" class="sticker">★ Petty Evals</a>
-        <nav class="flex gap-5 text-sm font-semibold">
-          <a href="/" class="styled">All fights</a>
-          <a href="/methodology" class="styled">The nerd shit</a>
+  <body class="flex min-h-dvh flex-col">
+    <header class="border-b border-zinc-200 bg-zinc-50 px-6 pt-4 md:px-10">
+      <div class="mx-auto flex max-w-5xl flex-col gap-3">
+        <a href="/" class="flex w-fit items-center gap-2 text-lg">
+          <svg viewBox="0 0 24 24" class="size-5 text-zinc-500" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="6" cy="5" r="2.25" /><circle cx="6" cy="19" r="2.25" /><circle cx="18" cy="12" r="2.25" />
+            <path d="M6 7.25v9.5M8 5h4a4 4 0 0 1 4 4v.75" stroke-linecap="round" />
+          </svg>
+          <span class="text-zinc-600">kmelve</span>
+          <span class="text-zinc-400">/</span>
+          <span class="font-semibold text-zinc-950">petty-evals</span>
+        </a>
+        <nav class="-mb-px flex gap-1 overflow-x-auto" aria-label="Main">
+          {tabs.map((tab) => (
+            <a
+              href={tab.href}
+              class:list={[
+                'border-b-2 px-3 py-2 text-sm font-medium whitespace-nowrap',
+                tab.active ? 'border-rose-500 text-zinc-950' : 'border-transparent text-zinc-600 hover:border-zinc-300 hover:text-zinc-950',
+              ]}
+              aria-current={tab.active ? 'page' : undefined}
+            >{tab.label}</a>
+          ))}
+          <a href="https://github.com/kmelve/petty-evals" class="ml-auto border-b-2 border-transparent px-3 py-2 text-sm font-medium whitespace-nowrap text-zinc-600 hover:text-zinc-950">Source ↗</a>
         </nav>
       </div>
     </header>
 
-    <main class="flex-1 px-6 md:px-10 py-10">
+    <main class="isolate flex-1 px-6 py-10 md:px-10">
       <div class="mx-auto max-w-5xl">
         <slot />
       </div>
     </main>
 
-    <footer class="px-6 md:px-10 py-10 border-t-2 mt-16" style="border-color: var(--color-ink);">
-      <div class="mx-auto max-w-5xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-          <div class="display text-2xl mb-1">I made this.</div>
-          <div class="text-sm" style="color: var(--color-muted);">
-            <a href="https://github.com/kmelve" class="styled">@kmelve</a>
-            · fight rigorously, fight petty
-          </div>
-        </div>
-        <a href="https://github.com/kmelve/petty-evals" class="sticker sticker--blue">Source on GitHub</a>
+    <footer class="border-t border-zinc-200 px-6 py-8 md:px-10">
+      <div class="mx-auto flex max-w-5xl flex-col justify-between gap-2 text-sm text-zinc-600 sm:flex-row">
+        <p>Rigorous benchmarks for problems that don't matter.</p>
+        <p>Made by <a href="https://github.com/kmelve" class="font-medium text-zinc-900 hover:text-sky-700">@kmelve</a>. Take with all the pinches of salt.</p>
       </div>
     </footer>
+    {import.meta.env.PROD && (
+      <>
+        <!-- Vercel Web Analytics: page views plus the "share" events the side pages send. Needs Web Analytics enabled on the project. -->
+        <script is:inline>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+        <script is:inline defer src="/_vercel/insights/script.js"></script>
+      </>
+    )}
   </body>
 </html>

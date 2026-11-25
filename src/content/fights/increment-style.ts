@@ -11,6 +11,11 @@ export const fight: Fight = {
     'Write a JavaScript function that returns the index of the first negative number in an array using an indexed loop.',
   ],
   classifier: { type: 'regex', pattern: 'increment-style' },
+  sides: [
+    { label: "postfix", name: "i++" },
+    { label: "prefix", name: "++i" },
+    { label: "assign", name: "i += 1" },
+  ],
   submittedBy: 'petty-evals-team',
   dateAdded: '2026-06-03',
 };

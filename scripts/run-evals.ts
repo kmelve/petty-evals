@@ -3,8 +3,9 @@
 //
 // Usage:
 //   pnpm evals --fight=<slug>                  # full run (10 runs × 3 variants × 2 temps × N models)
+//   pnpm evals --fight=all --dry-run           # plan + cost estimate for every fight
 //   pnpm evals --fight=<slug> --dry-run        # plan only, no API calls
-//   pnpm evals --fight=<slug> --smoke          # 1 run × 1 variant × 1 temp × N models (smoke test)
+//   pnpm evals --fight=<slug> --smoke          # 1 run × 1 variant × 1 temp × N models; prints, never writes
 //   pnpm evals --fight=<slug> --runs=5 --variants=1 --temps=1
 //
 // Flags:
@@ -14,26 +15,29 @@
 //   --concurrency=N      parallel calls (default 4)
 //   --timeout-ms=N       per-call timeout (default 90000)
 //   --retries=N          retry attempts (default 2)
-//   --smoke              alias for --runs=1 --variants=1 --temps=1
+//   --smoke              alias for --runs=1 --variants=1 --temps=1 --no-write
+//   --no-write           run and print, but don't write the result file (calibration)
 
-// Suppress AI SDK temperature warnings for OpenAI reasoning models (gpt-5.4 family).
-// These models silently ignore temperature; the warning is correct but noisy.
-// Methodology page documents this explicitly.
+// Suppress AI SDK warnings about unsupported settings: several reasoning
+// models on OpenRouter ignore temperature. The warning is correct but noisy;
+// the methodology page documents this explicitly.
 (globalThis as Record<string, unknown>).AI_SDK_LOG_WARNINGS = false;
 
 import { pathToFileURL } from 'node:url';
 import path from 'node:path';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, writeFile } from 'node:fs/promises';
 import { buildPlan, runFight, explodeCells } from '../src/lib/eval/runner.ts';
 import { enabledModels } from '../src/lib/eval/providers/index.ts';
+import { fetchLivePricing, type LivePricing } from '../src/lib/eval/providers/openrouter.ts';
 import { aggregate, writeReport } from '../src/lib/eval/report.ts';
-import { buildPunditPrompt, callPundit, pickRepresentativeSample, classifyMode } from '../src/lib/eval/pundit.ts';
-import type { Fight, RunRecord } from '../src/lib/eval/types.ts';
+import { firePundits } from '../src/lib/eval/pundit.ts';
+import type { Fight, ModelConfig } from '../src/lib/eval/types.ts';
 
 interface CliArgs {
   fight: string | null;
   dryRun: boolean;
   smoke: boolean;
+  noWrite: boolean;
   runs: number;
   variants: number | null;
   temps: number | null;
@@ -47,6 +51,7 @@ function parseArgs(argv: string[]): CliArgs {
     fight: null,
     dryRun: false,
     smoke: false,
+    noWrite: false,
     runs: 10,
     variants: null,
     temps: null,
@@ -57,6 +62,7 @@ function parseArgs(argv: string[]): CliArgs {
   for (const a of argv) {
     if (a === '--dry-run') args.dryRun = true;
     else if (a === '--smoke') args.smoke = true;
+    else if (a === '--no-write') args.noWrite = true;
     else if (a.startsWith('--fight=')) args.fight = a.slice('--fight='.length);
     else if (a.startsWith('--runs=')) args.runs = Number.parseInt(a.slice('--runs='.length), 10);
     else if (a.startsWith('--variants=')) args.variants = Number.parseInt(a.slice('--variants='.length), 10);
@@ -66,6 +72,7 @@ function parseArgs(argv: string[]): CliArgs {
     else if (a.startsWith('--retries=')) args.retries = Number.parseInt(a.slice('--retries='.length), 10);
   }
   if (args.smoke) {
+    args.noWrite = true;
     args.runs = 1;
     args.variants = 1;
     args.temps = 1;
@@ -81,20 +88,70 @@ async function loadFight(slug: string): Promise<Fight> {
   return fight;
 }
 
+async function listFightSlugs(): Promise<string[]> {
+  const dir = path.resolve(process.cwd(), 'src/content/fights');
+  return (await readdir(dir)).filter((f) => f.endsWith('.ts')).map((f) => f.replace(/\.ts$/, '')).sort();
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   if (!args.fight) {
-    console.error('Usage: pnpm evals --fight=<slug> [--dry-run] [--smoke] [--runs=N] [--variants=N] [--temps=N]');
+    console.error('Usage: pnpm evals --fight=<slug|all> [--dry-run] [--smoke] [--runs=N] [--variants=N] [--temps=N]');
     process.exit(2);
   }
-  const fullFight = await loadFight(args.fight);
+  const slugs = args.fight === 'all' ? await listFightSlugs() : [args.fight];
+  const models = enabledModels();
+
+  let pricing: Record<string, LivePricing> = {};
+  try {
+    pricing = await fetchLivePricing();
+  } catch (err) {
+    console.warn(`Could not fetch live OpenRouter pricing, cost estimate will be incomplete: ${(err as Error).message}`);
+  }
+  for (const m of models) {
+    if (Object.keys(pricing).length > 0 && !pricing[m.openrouterId]) {
+      console.warn(`WARNING: ${m.openrouterId} is not listed on OpenRouter. Check the id in providers/index.ts.`);
+    }
+  }
+
+  let estimated = 0;
+  let spent = 0;
+  const failed: string[] = [];
+  for (const slug of slugs) {
+    try {
+      const outcome = await runOne(slug, args, models, pricing);
+      estimated += outcome.estCostUsd;
+      spent += outcome.spentUsd;
+    } catch (err) {
+      // In batch mode one bad fight shouldn't throw away the rest of the run.
+      if (slugs.length === 1) throw err;
+      failed.push(slug);
+      console.error(`FAILED ${slug}: ${(err as Error).message}\n`);
+    }
+  }
+  if (slugs.length > 1) {
+    console.log('═'.repeat(60));
+    console.log(`${slugs.length} fights. Estimated: $${estimated.toFixed(2)}. Spent on generations: $${spent.toFixed(2)}.`);
+    if (failed.length) {
+      console.log(`Failed (${failed.length}): ${failed.join(', ')}`);
+      process.exitCode = 1;
+    }
+  }
+}
+
+async function runOne(
+  slug: string,
+  args: CliArgs,
+  models: ModelConfig[],
+  pricing: Record<string, LivePricing>,
+): Promise<{ estCostUsd: number; spentUsd: number }> {
+  const fullFight = await loadFight(slug);
   // Apply variant subset
   const fight: Fight = args.variants !== null
     ? { ...fullFight, promptVariants: fullFight.promptVariants.slice(0, args.variants) }
     : fullFight;
   const allTemps = [0.0, 0.7];
   const temperatures = args.temps !== null ? allTemps.slice(0, args.temps) : allTemps;
-  const models = enabledModels();
 
   const plan = buildPlan({
     fight,
@@ -103,7 +160,7 @@ async function main() {
     temperatures,
     concurrency: args.concurrency,
     dryRun: args.dryRun,
-  });
+  }, pricing);
 
   console.log('Petty Evals — run plan');
   console.log('─'.repeat(60));
@@ -113,7 +170,11 @@ async function main() {
   console.log(`Temperatures:     ${temperatures.join(', ')}`);
   console.log(`Runs per cell:    ${args.runs}`);
   console.log(`Models enabled:   ${models.length}`);
-  for (const m of models) console.log(`  - ${m.id} (${m.provider})`);
+  for (const m of plan.perModel) {
+    const cfg = models.find((c) => c.id === m.id)!;
+    const est = m.estCostUsd === null ? 'price unknown' : `~$${m.estCostUsd.toFixed(2)}`;
+    console.log(`  - ${cfg.openrouterId.padEnd(34)} ${est}`);
+  }
   console.log('');
   console.log(`Total calls:      ${plan.totalCalls}`);
   console.log(`Estimated cost:   $${plan.estTotalCostUsd.toFixed(2)} USD`);
@@ -128,7 +189,8 @@ async function main() {
       fight, models, runsPerCell: args.runs, temperatures, concurrency: args.concurrency, dryRun: true,
     });
     console.log(`Would explode to ${cells.length} cell specs.`);
-    return;
+    console.log('');
+    return { estCostUsd: plan.estTotalCostUsd, spentUsd: 0 };
   }
 
   const runStartedAt = new Date().toISOString();
@@ -154,7 +216,7 @@ async function main() {
   const runFinishedAt = new Date().toISOString();
   const wallS = ((Date.now() - t0) / 1000).toFixed(1);
   const errorCount = runs.filter(r => r.error).length;
-  console.log(`\nGenerations complete: ${runs.length} runs in ${wallS}s (${errorCount} errors). Firing pundits...`);
+  console.log(`\nGenerations complete: ${runs.length} runs in ${wallS}s (${errorCount} errors).`);
 
   // Save raw runs to disk before pundit pass — protects against partial failure
   const tmpDir = path.resolve(process.cwd(), 'src/data/results/.tmp');
@@ -165,49 +227,41 @@ async function main() {
   );
   console.log(`Saved raw runs to ${path.join(tmpDir, fight.slug + '-raw-runs.json')}`);
 
-  // Pundit pass — one call per model.
-  const punditQuotes: Record<string, string> = {};
-  const voteTally: Record<string, Record<string, number>> = {};
-  const representative: Record<string, string> = {};
-  const modelVotes: Record<string, string> = {};
-  for (const m of models) {
-    const myRuns = runs.filter((r: RunRecord) => r.modelId === m.id);
-    const dist: Record<string, number> = {};
-    for (const r of myRuns) dist[r.classification] = (dist[r.classification] ?? 0) + 1;
-    voteTally[m.id] = dist;
-    const modal = Object.entries(dist).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'unknown';
-    modelVotes[m.id] = modal;
-    representative[m.id] = pickRepresentativeSample(myRuns, modal);
+  const spentUsd = runs.reduce((sum, r) => sum + r.costUsd, 0);
+  // Don't overwrite a good result file with a run that mostly failed (bad key, outage, wrong model id).
+  if (errorCount > runs.length / 2) {
+    const sample = runs.find((r) => r.error)?.error ?? '';
+    throw new Error(`${errorCount}/${runs.length} calls failed for ${fight.slug}; not writing results. First error: ${sample}`);
   }
-  // Determine winner across models (majority of modal votes)
-  const tally: Record<string, number> = {};
-  for (const v of Object.values(modelVotes)) tally[v] = (tally[v] ?? 0) + 1;
-  const winner = Object.entries(tally).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'unknown';
-  const mode = classifyMode(modelVotes);
   for (const m of models) {
-    const prompt = buildPunditPrompt({
-      fight, voteTally, modelVotes, representativeSamples: representative,
-      selfModelId: m.id, winner, mode,
-    });
-    try {
-      const quote = await callPundit(m, prompt);
-      punditQuotes[m.id] = quote;
-      console.log(`Pundit ${m.id}: ${quote.slice(0, 100)}${quote.length > 100 ? '…' : ''}`);
-    } catch (err) {
-      punditQuotes[m.id] = '';
-      console.error(`Pundit failed for ${m.id}:`, err);
-    }
+    const failed = runs.filter((r) => r.modelId === m.id && r.error).length;
+    if (failed > 0) console.warn(`  ${m.id}: ${failed} failed calls`);
   }
 
-  const result = aggregate(fight, runs, punditQuotes, runStartedAt, runFinishedAt);
-  const outDir = path.resolve(process.cwd(), 'src/data/results');
-  await mkdir(outDir, { recursive: true });
-  const file = await writeReport(result, outDir);
-  console.log(`\nWrote ${file}`);
+  console.log('Firing pundits...');
+  const result = aggregate(fight, runs, models, runStartedAt, runFinishedAt);
+
+  await firePundits(fight, result, (modelId, outcome) => {
+    if ('quote' in outcome) console.log(`Pundit ${modelId}: ${outcome.quote}`);
+    else if ('error' in outcome) console.error(`Pundit failed for ${modelId}:`, outcome.error);
+    else console.warn(`Pundit skipped for ${modelId}: ${outcome.skipped}`);
+  });
+
+  if (args.noWrite) {
+    // Smoke and calibration runs are too small to stand in for a real result file.
+    console.log('\n--no-write: result not written.');
+  } else {
+    const outDir = path.resolve(process.cwd(), 'src/data/results');
+    await mkdir(outDir, { recursive: true });
+    const file = await writeReport(result, outDir);
+    console.log(`\nWrote ${file}`);
+  }
   console.log(`Verdict: ${result.verdict.winner} (${JSON.stringify(result.verdict.tally)})`);
   console.log(`Disagreement Index: ${result.verdict.disagreementIndex.toFixed(3)}`);
   console.log(`Total cost: $${result.totalCostUsd.toFixed(4)}`);
   console.log(`Wall-clock: ${wallS}s`);
+  console.log('');
+  return { estCostUsd: plan.estTotalCostUsd, spentUsd };
 }
 
 main().catch((err) => {

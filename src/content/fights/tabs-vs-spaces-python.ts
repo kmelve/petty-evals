@@ -11,6 +11,10 @@ export const fight: Fight = {
     'Write a Python function that returns the nth Fibonacci number using memoization.',
   ],
   classifier: { type: 'regex', pattern: 'tabs-vs-spaces-python' },
+  sides: [
+    { label: "spaces", name: "spaces" },
+    { label: "tabs", name: "tabs" },
+  ],
   submittedBy: 'petty-evals-team',
   dateAdded: '2026-06-03',
 };

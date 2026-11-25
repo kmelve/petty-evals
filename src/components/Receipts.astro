@@ -1,4 +1,7 @@
 ---
+// "Files changed": a few raw samples per model so anyone can check the classifier.
+import { prettyLabel } from '../lib/site/fight-summary.ts';
+
 interface RunRecord {
   variantIndex: number;
   temperature: number;
@@ -6,40 +9,50 @@ interface RunRecord {
   prompt: string;
   output: string;
   classification: string;
+  error?: string;
 }
 interface ModelResult {
   id: string;
   displayName: string;
   runs: RunRecord[];
 }
-interface Props { models: ModelResult[]; }
-const { models } = Astro.props;
+interface Props {
+  models: ModelResult[];
+  slug: string;
+}
+const { models, slug } = Astro.props;
+const SAMPLES = 3;
+const MAX_CHARS = 1200;
+
+// One sample per prompt variant reads better than three runs of the same prompt.
+function pickSamples(runs: RunRecord[]): RunRecord[] {
+  const ok = runs.filter((r) => !r.error && r.output);
+  const byVariant = new Map<number, RunRecord>();
+  for (const r of ok) if (!byVariant.has(r.variantIndex)) byVariant.set(r.variantIndex, r);
+  return [...byVariant.values()].slice(0, SAMPLES);
+}
 ---
-<div class="space-y-2 mt-4">
+<div class="flex flex-col gap-3">
   {models.map((model) => (
-    <details class="chunky p-4">
-      <summary class="cursor-pointer font-semibold flex items-center justify-between">
-        <span>{model.displayName} — {model.runs.length} samples</span>
-        <span class="text-xs font-mono" style="color: var(--color-muted);">click to expand</span>
+    <details class="group overflow-hidden rounded-lg border border-zinc-200">
+      <summary class="flex cursor-pointer list-none items-center justify-between gap-3 bg-zinc-50 px-4 py-3 text-sm [&::-webkit-details-marker]:hidden">
+        <span class="font-mono font-medium text-zinc-900">{model.id}/samples.md</span>
+        <span class="text-zinc-600">{model.runs.length} samples <span class="inline-block transition-transform group-open:rotate-90">›</span></span>
       </summary>
-      <div class="mt-4 space-y-5">
-        {model.runs.slice(0, 3).map((run) => (
-          <div>
-            <div class="text-xs font-mono mb-2" style="color: var(--color-muted);">
-              variant {run.variantIndex} · temp {run.temperature} · run {run.runIndex} · → <strong style="color: var(--color-coral);">{run.classification}</strong>
+      <div class="flex flex-col divide-y divide-zinc-200">
+        {pickSamples(model.runs).map((run) => (
+          <div class="flex flex-col">
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-zinc-200 px-4 py-2 text-sm text-zinc-600">
+              <span class="font-mono">prompt {run.variantIndex + 1} · temp {run.temperature} · run {run.runIndex + 1}</span>
+              <span>classified as <strong class="font-semibold text-zinc-900">{prettyLabel(run.classification)}</strong></span>
             </div>
-            <div class="text-xs uppercase tracking-wide mb-1" style="color: var(--color-muted);">Prompt</div>
-            <p class="text-sm mb-3 pl-3" style="border-left: 3px solid var(--color-blue);"><em>{run.prompt}</em></p>
-            <div class="text-xs uppercase tracking-wide mb-1" style="color: var(--color-muted);">Response (first 800 chars)</div>
-            <pre class="code-block"><code>{run.output.slice(0, 800)}{run.output.length > 800 ? '\n…' : ''}</code></pre>
+            <p class="border-y border-zinc-200 bg-sky-50/50 px-4 py-2 text-sm text-zinc-700"><span class="font-medium">Prompt:</span> {run.prompt}</p>
+            <pre class="code-pane"><code>{run.output.slice(0, MAX_CHARS)}{run.output.length > MAX_CHARS ? '\n…' : ''}</code></pre>
           </div>
         ))}
-        {model.runs.length > 3 && (
-          <p class="text-sm" style="color: var(--color-muted);">
-            …and {model.runs.length - 3} more samples (across 3 prompt variants × 2 temperatures × 10 runs). Full data in the result JSON on
-            <a href={'https://github.com/kmelve/petty-evals/blob/main/src/data/results/' + model.id + '.json'} class="styled">GitHub</a>.
-          </p>
-        )}
+        <p class="px-4 py-3 text-sm text-zinc-600">
+          Every sample is in <a href={`https://github.com/kmelve/petty-evals/blob/main/src/data/results/${slug}.json`} class="font-medium text-sky-700 hover:underline">{slug}.json</a>.
+        </p>
       </div>
     </details>
   ))}

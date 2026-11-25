@@ -11,6 +11,10 @@ export const fight: Fight = {
     'Write a PHP function that takes a 2D array of integers and returns the sum of each row as a new array.',
   ],
   classifier: { type: 'regex', pattern: 'array-syntax-php' },
+  sides: [
+    { label: "short", name: "[]" },
+    { label: "array", name: "array()" },
+  ],
   submittedBy: 'petty-evals-team',
   dateAdded: '2026-06-04',
 };

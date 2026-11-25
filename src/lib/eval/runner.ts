@@ -2,12 +2,14 @@
 // for each temperature in {0.0, 0.7}, fire N runs and classify the output.
 //
 // API calls are gated behind `opts.dryRun` — when true, the runner returns
-// the run *plan* and an estimated cost based on hand-tuned token counts.
+// the run *plan* and an estimated cost from live OpenRouter pricing and
+// hand-tuned token counts.
 
 import pLimit from 'p-limit';
 import { generateText } from 'ai';
 import type { Fight, ModelConfig, RunRecord } from './types.ts';
-import { resolveModel, computeCostUsd, enabledModels } from './providers/index.ts';
+import { enabledModels } from './providers/index.ts';
+import { resolveModel, costFromProviderMetadata, estimateCostUsd, type LivePricing } from './providers/openrouter.ts';
 import { classifyOutput } from './classifiers/index.ts';
 
 export interface RunOptions {
@@ -28,30 +30,35 @@ export interface RunOptions {
 export interface RunPlan {
   fightSlug: string;
   totalCalls: number;
-  perModel: Array<{ id: string; calls: number; estCostUsd: number }>;
+  perModel: Array<{ id: string; calls: number; estCostUsd: number | null }>;
   estTotalCostUsd: number;
 }
 
-// Token estimates for cost projection — deliberately conservative.
+// Token estimates for cost projection — deliberately conservative. Output
+// includes a little headroom for low-effort reasoning tokens.
 const EST_INPUT_TOKENS = 80;
-const EST_OUTPUT_TOKENS = 350;
+const EST_OUTPUT_TOKENS = 600;
 
 const DEFAULT_TIMEOUT_MS = 90_000;
 const DEFAULT_MAX_RETRIES = 2;
 
-export function buildPlan(opts: RunOptions): RunPlan {
+/** `pricing` is keyed by OpenRouter id; models missing from it get a null estimate. */
+export function buildPlan(opts: RunOptions, pricing: Record<string, LivePricing> = {}): RunPlan {
   const models = opts.models ?? enabledModels();
   const callsPerModel = opts.fight.promptVariants.length * opts.temperatures.length * opts.runsPerCell;
-  const perModel = models.map((m) => ({
-    id: m.id,
-    calls: callsPerModel,
-    estCostUsd: callsPerModel * computeCostUsd(m.pricing, EST_INPUT_TOKENS, EST_OUTPUT_TOKENS),
-  }));
+  const perModel = models.map((m) => {
+    const p = pricing[m.openrouterId];
+    return {
+      id: m.id,
+      calls: callsPerModel,
+      estCostUsd: p ? callsPerModel * estimateCostUsd(p, EST_INPUT_TOKENS, EST_OUTPUT_TOKENS) : null,
+    };
+  });
   return {
     fightSlug: opts.fight.slug,
     totalCalls: callsPerModel * models.length,
     perModel,
-    estTotalCostUsd: perModel.reduce((s, m) => s + m.estCostUsd, 0),
+    estTotalCostUsd: perModel.reduce((s, m) => s + (m.estCostUsd ?? 0), 0),
   };
 }
 
@@ -84,18 +91,13 @@ export function explodeCells(opts: RunOptions): CellSpec[] {
   return cells;
 }
 
-async function attemptCall(
-  fight: Fight,
-  cell: CellSpec,
-  timeoutMs: number,
-  useFallback: boolean,
-): Promise<RunRecord> {
+async function attemptCall(fight: Fight, cell: CellSpec, timeoutMs: number): Promise<RunRecord> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(new Error(`Timed out after ${timeoutMs}ms`)), timeoutMs);
   const t0 = Date.now();
   try {
     const result = await generateText({
-      model: resolveModel(cell.model, useFallback),
+      model: resolveModel(cell.model),
       prompt: cell.variantPrompt,
       temperature: cell.temperature,
       abortSignal: controller.signal,
@@ -114,7 +116,7 @@ async function attemptCall(
       inputTokens,
       outputTokens,
       latencyMs: Date.now() - t0,
-      costUsd: computeCostUsd(cell.model.pricing, inputTokens, outputTokens),
+      costUsd: costFromProviderMetadata(result.providerMetadata),
     };
   } finally {
     clearTimeout(timer);
@@ -132,25 +134,15 @@ export async function executeCell(opts: {
   const maxRetries = opts.maxRetries ?? DEFAULT_MAX_RETRIES;
   let lastError: unknown = null;
 
-  // Try primary model up to (maxRetries + 1) times; if all fail and a fallback exists, try fallback once.
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      return await attemptCall(fight, cell, timeoutMs, false);
+      return await attemptCall(fight, cell, timeoutMs);
     } catch (err) {
       lastError = err;
       // Backoff before retry (skip on last attempt)
       if (attempt < maxRetries) {
         await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
       }
-    }
-  }
-
-  // Fallback model id, single shot
-  if (cell.model.fallbackModelId) {
-    try {
-      return await attemptCall(fight, cell, timeoutMs, true);
-    } catch (err) {
-      lastError = err;
     }
   }
 

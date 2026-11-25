@@ -1,148 +1,142 @@
-// Provider registry. V1 ships 4 enabled models; stubs for V1.1 expansion.
+// The panel. Every model is called through OpenRouter (see ./openrouter.ts).
 //
-// Pricing + model IDs verified 2026-06-03 against:
-//  - anthropic.com/pricing
-//  - openai.com/api/pricing
-//  - ai.google.dev/pricing
-//  - SDK .d.ts files for current valid model ID strings
+// Roster picked 2026-11-25 from OpenRouter's programming-category popularity
+// ranking, balanced so the big US labs face off against the open-weight
+// models developers actually route coding traffic to. Run
+// `pnpm models:popular` to see the current ranking when it's time to revisit.
+//
+// `shortName` is what the pundits call each other ("Kimi", "GLM"), so keep it
+// to something a developer would say out loud.
 
 import type { ModelConfig } from '../types.ts';
-import {
-  anthropicClient,
-  claudeSonnet46Pricing,
-  claudeOpus48Pricing,
-  claudeFable5Pricing,
-} from './anthropic.ts';
-import { openaiClient, gpt54Pricing, gpt54MiniPricing } from './openai.ts';
-import { googleClient, gemini25ProPricing, gemini3ProPricing } from './google.ts';
-import type { LanguageModel } from 'ai';
 
 export const MODELS: ModelConfig[] = [
+  // ---- Frontier labs ----
   {
-    id: 'claude-sonnet-4-6',
-    displayName: 'Claude Sonnet 4.6',
-    provider: 'anthropic',
-    modelId: 'claude-sonnet-4-6',
-    pricing: claudeSonnet46Pricing,
+    id: 'claude-opus-5.5',
+    displayName: 'Claude Opus 5.5',
+    shortName: 'Opus',
+    lab: 'Anthropic',
+    openrouterId: 'anthropic/claude-opus-5.5',
+    openWeights: false,
     enabled: true,
   },
   {
-    id: 'gpt-5.4',
-    displayName: 'GPT-5.4',
-    provider: 'openai',
-    modelId: 'gpt-5.4',
-    fallbackModelId: 'gpt-5',
-    pricing: gpt54Pricing,
+    id: 'claude-sonnet-5.5',
+    displayName: 'Claude Sonnet 5.5',
+    shortName: 'Sonnet',
+    lab: 'Anthropic',
+    openrouterId: 'anthropic/claude-sonnet-5.5',
+    openWeights: false,
     enabled: true,
   },
   {
-    id: 'gpt-5.4-mini',
-    displayName: 'GPT-5.4 mini',
-    provider: 'openai',
-    modelId: 'gpt-5.4-mini',
-    fallbackModelId: 'gpt-5-mini',
-    pricing: gpt54MiniPricing,
+    id: 'gpt-6.2-sol',
+    displayName: 'GPT-6.2 Sol',
+    shortName: 'GPT',
+    lab: 'OpenAI',
+    openrouterId: 'openai/gpt-6.2-sol',
+    openWeights: false,
     enabled: true,
   },
   {
-    id: 'gemini-2.5-pro',
-    displayName: 'Gemini 2.5 Pro',
-    provider: 'google',
-    modelId: 'gemini-2.5-pro',
-    pricing: gemini25ProPricing,
+    id: 'gemini-4-neon',
+    displayName: 'Gemini 4 Neon',
+    shortName: 'Gemini',
+    lab: 'Google',
+    openrouterId: 'google/gemini-4-neon',
+    openWeights: false,
     enabled: true,
   },
-  // ---- V1.1 stubs ----
+  // ---- Open weights ----
   {
-    id: 'gemini-3-pro-preview',
-    displayName: 'Gemini 3 Pro (preview)',
-    provider: 'google',
-    modelId: 'gemini-3-pro-preview',
-    pricing: gemini3ProPricing,
+    id: 'kimi-k3.1-pro',
+    displayName: 'Kimi K3.1 Pro',
+    shortName: 'Kimi',
+    lab: 'Moonshot AI',
+    openrouterId: 'moonshotai/kimi-k3.1-pro',
+    openWeights: true,
+    enabled: true,
+  },
+  {
+    id: 'glm-5.3',
+    displayName: 'GLM 5.3',
+    shortName: 'GLM',
+    lab: 'Z.ai',
+    openrouterId: 'z-ai/glm-5.3',
+    openWeights: true,
+    enabled: true,
+  },
+  {
+    id: 'deepseek-v4.1-flash',
+    displayName: 'DeepSeek V4.1 Flash',
+    shortName: 'DeepSeek',
+    lab: 'DeepSeek',
+    openrouterId: 'deepseek/deepseek-v4.1-flash',
+    openWeights: true,
+    enabled: true,
+  },
+  {
+    id: 'minimax-m3.1-flash',
+    displayName: 'MiniMax M3.1 Flash',
+    shortName: 'MiniMax',
+    lab: 'MiniMax',
+    openrouterId: 'minimax/minimax-m3.1-flash',
+    openWeights: true,
+    enabled: true,
+  },
+  // ---- Benched: flip `enabled` to bring them in ----
+  {
+    id: 'grok-4.7',
+    displayName: 'Grok 4.7',
+    shortName: 'Grok',
+    lab: 'xAI',
+    openrouterId: 'x-ai/grok-4.7',
+    openWeights: false,
     enabled: false,
   },
   {
-    id: 'claude-opus-4-8',
-    displayName: 'Claude Opus 4.8',
-    provider: 'anthropic',
-    modelId: 'claude-opus-4-8',
-    pricing: claudeOpus48Pricing,
-    enabled: false,
-  },
-  // Fable 5 (Mythos-class). 1M context, ~2× Opus pricing
-  // ($10/M in, $50/M out). Disabled by default — enable only for a
-  // deliberate Big Eval run, since a full 28-fight benchmark at
-  // 240 calls/fight is ~6,720 calls per model.
-  {
-    id: 'claude-fable-5',
-    displayName: 'Claude Fable 5',
-    provider: 'anthropic',
-    modelId: 'claude-fable-5',
-    pricing: claudeFable5Pricing,
+    id: 'qwen4-max',
+    displayName: 'Qwen4 Max',
+    shortName: 'Qwen',
+    lab: 'Alibaba',
+    openrouterId: 'qwen/qwen4-max',
+    openWeights: false,
     enabled: false,
   },
   {
-    id: 'grok-4',
-    displayName: 'Grok 4',
-    provider: 'openrouter',
-    modelId: 'x-ai/grok-4',
-    pricing: { inputUsdPerMTok: 5.0, outputUsdPerMTok: 15.0 }, // TODO verify
+    id: 'devstral-2',
+    displayName: 'Devstral 2',
+    shortName: 'Devstral',
+    lab: 'Mistral',
+    openrouterId: 'mistralai/devstral-2512',
+    openWeights: true,
     enabled: false,
   },
+  // $8/$40 per MTok. Only for a deliberate Big Eval.
   {
-    id: 'deepseek-v3.5',
-    displayName: 'DeepSeek V3.5',
-    provider: 'openrouter',
-    modelId: 'deepseek/deepseek-chat',
-    pricing: { inputUsdPerMTok: 0.27, outputUsdPerMTok: 1.1 }, // TODO verify
-    enabled: false,
-  },
-  {
-    id: 'qwen-3-coder',
-    displayName: 'Qwen 3 Coder',
-    provider: 'openrouter',
-    modelId: 'qwen/qwen-3-coder',
-    pricing: { inputUsdPerMTok: 0.3, outputUsdPerMTok: 1.2 }, // TODO verify
+    id: 'claude-fable-5.2',
+    displayName: 'Claude Fable 5.2',
+    shortName: 'Fable',
+    lab: 'Anthropic',
+    openrouterId: 'anthropic/claude-fable-5.2',
+    openWeights: false,
     enabled: false,
   },
 ];
+
+/** Cheap, fast model used for LLM-judge classification. */
+export const JUDGE_MODEL: Pick<ModelConfig, 'openrouterId' | 'reasoningEffort'> = {
+  openrouterId: 'anthropic/claude-haiku-5.5',
+  reasoningEffort: 'low',
+};
 
 export function enabledModels(): ModelConfig[] {
   return MODELS.filter((m) => m.enabled);
 }
 
-/**
- * Resolve a LanguageModel handle from the AI SDK for a configured model.
- * Lazy — only constructs the provider client on first use, so dry runs work
- * even when API keys are absent.
- */
-export function resolveModel(config: ModelConfig, useFallback = false): LanguageModel {
-  const modelId = useFallback && config.fallbackModelId ? config.fallbackModelId : config.modelId;
-  switch (config.provider) {
-    case 'anthropic':
-      return anthropicClient()(modelId);
-    case 'openai':
-      return openaiClient()(modelId);
-    case 'google':
-      return googleClient()(modelId);
-    case 'openrouter':
-      throw new Error('OpenRouter provider not yet wired (V1 stub).');
-    default: {
-      const _exhaustive: never = config.provider;
-      throw new Error(`Unhandled provider: ${_exhaustive}`);
-    }
-  }
+export function findModel(id: string): ModelConfig | undefined {
+  return MODELS.find((m) => m.id === id);
 }
 
-export function computeCostUsd(
-  pricing: ProviderPricingLike,
-  inputTokens: number,
-  outputTokens: number,
-): number {
-  return (
-    (inputTokens / 1_000_000) * pricing.inputUsdPerMTok +
-    (outputTokens / 1_000_000) * pricing.outputUsdPerMTok
-  );
-}
-
-type ProviderPricingLike = { inputUsdPerMTok: number; outputUsdPerMTok: number };
+export { resolveModel } from './openrouter.ts';

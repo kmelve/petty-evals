@@ -1,15 +1,12 @@
-// LLM judge classifier. Uses Claude Haiku as a cheap deterministic judge.
+// LLM judge classifier. Uses a cheap model via OpenRouter as a deterministic judge.
 //
-// Used only as a tie-breaker when the regex classifier returns 'unknown'.
-// Each fight defines its own judge prompt; for V1 we only ship one judge.
+// Intended as a tie-breaker when the regex classifier returns 'unknown'.
+// Not wired into any fight yet; see classifiers/index.ts.
 
 import { generateText } from 'ai';
-import { createAnthropic } from '@ai-sdk/anthropic';
 import type { Label } from '../types.ts';
-
-const anthropic = createAnthropic({ apiKey: process.env.ANTHROPIC_DEV_API_KEY });
-
-const JUDGE_MODEL = 'claude-haiku-4-5';
+import { JUDGE_MODEL } from '../providers/index.ts';
+import { resolveModel } from '../providers/openrouter.ts';
 
 export async function llmJudge(opts: {
   question: string;
@@ -29,7 +26,7 @@ export async function llmJudge(opts: {
   ].join('\n');
 
   const result = await generateText({
-    model: anthropic(JUDGE_MODEL),
+    model: resolveModel(JUDGE_MODEL),
     prompt,
     temperature: 0,
   });

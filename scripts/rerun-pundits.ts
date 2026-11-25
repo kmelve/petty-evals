@@ -2,13 +2,7 @@
 import { pathToFileURL } from 'node:url';
 import path from 'node:path';
 import { readFile, writeFile, readdir } from 'node:fs/promises';
-import {
-  buildPunditPrompt,
-  callPundit,
-  pickRepresentativeSample,
-  classifyMode,
-} from '../src/lib/eval/pundit.ts';
-import { MODELS } from '../src/lib/eval/providers/index.ts';
+import { firePundits } from '../src/lib/eval/pundit.ts';
 import type { Fight, FightResult } from '../src/lib/eval/types.ts';
 
 async function loadFight(slug: string): Promise<Fight> {
@@ -22,44 +16,14 @@ async function rerunFile(jsonPath: string): Promise<void> {
   const slug = raw.slug;
   const fight = await loadFight(slug);
 
-  const voteTally: Record<string, Record<string, number>> = {};
-  const modelVotes: Record<string, string> = {};
-  const representativeSamples: Record<string, string> = {};
-  for (const m of raw.models) {
-    voteTally[m.id] = m.voteDistribution;
-    modelVotes[m.id] = m.vote;
-    representativeSamples[m.id] = pickRepresentativeSample(m.runs, m.vote);
-  }
-  const winner = raw.verdict.winner;
-  const mode = classifyMode(modelVotes);
+  console.log('[' + slug + '] winner=' + raw.verdict.winner);
+  await firePundits(fight, raw, (modelId, outcome) => {
+    if ('quote' in outcome) console.log('  ' + modelId + ': ' + outcome.quote.slice(0, 140));
+    else if ('error' in outcome) console.error('  ' + modelId + ' FAILED: ' + (outcome.error as Error).message);
+    else console.log('  skip ' + modelId + ' (' + outcome.skipped + ')');
+  });
 
-  console.log('[' + slug + '] mode=' + mode + ' winner=' + winner);
-
-  for (const m of raw.models) {
-    const config = MODELS.find((c) => c.id === m.id);
-    if (!config) {
-      console.log('  skip ' + m.id + ' (no config)');
-      continue;
-    }
-    const prompt = buildPunditPrompt({
-      fight,
-      voteTally,
-      modelVotes,
-      representativeSamples,
-      selfModelId: m.id,
-      winner,
-      mode,
-    });
-    try {
-      const quote = await callPundit(config, prompt);
-      m.punditQuote = quote;
-      console.log('  ' + m.id + ': ' + quote.slice(0, 140));
-    } catch (err) {
-      console.error('  ' + m.id + ' FAILED: ' + (err as Error).message);
-    }
-  }
-
-  await writeFile(jsonPath, JSON.stringify(raw, null, 2));
+  await writeFile(jsonPath, JSON.stringify(raw, null, 2) + '\n');
 }
 
 const slugs = process.argv.slice(2);

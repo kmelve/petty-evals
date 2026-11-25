@@ -1,0 +1,52 @@
+---
+// One model's pundit quote, rendered as a code review with a permalink and share intents.
+import Avatar from './Avatar.astro';
+import InlineCode from './InlineCode.astro';
+import { prettyLabel } from '../lib/site/fight-summary.ts';
+import { REVIEW_STATE_LABEL, rankText, reviewState } from '../lib/site/review.ts';
+import { quoteShareLinks } from '../lib/site/share.ts';
+
+interface Props {
+  slug: string;
+  fightTitle: string;
+  model: { id: string; name: string; lab?: string; vote: string; punditQuote: string | null; confidence: number };
+  winner: string;
+  rank: number;
+}
+const { slug, fightTitle, model, winner, rank } = Astro.props;
+const state = reviewState(model.vote, winner);
+const links = model.punditQuote
+  ? quoteShareLinks({ slug, modelId: model.id, modelName: model.name, fightTitle, quote: model.punditQuote })
+  : null;
+const stateIcon = {
+  approved: 'text-emerald-600',
+  'changes-requested': 'text-rose-600',
+  commented: 'text-zinc-500',
+}[state];
+---
+<article id={`review-${model.id}`} class="flex scroll-mt-6 gap-3">
+  <div class="pt-1"><Avatar name={model.name} rank={rank} size="lg" /></div>
+  <div class="flex min-w-0 flex-1 flex-col overflow-hidden rounded-lg border border-zinc-200 target:border-sky-500">
+    <header class="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm text-zinc-600">
+      <span class={stateIcon} aria-hidden="true">{state === 'approved' ? '✓' : state === 'changes-requested' ? '±' : '•'}</span>
+      <span class="font-semibold text-zinc-900">{model.name}</span>
+      {REVIEW_STATE_LABEL[state]}
+      <span class:list={['font-mono font-medium', rankText(rank)]}>{prettyLabel(model.vote)}</span>
+      <span class="ml-auto font-mono tabular-nums">{Math.round(model.confidence * 100)}% of runs</span>
+    </header>
+    <div class="flex flex-col gap-3 px-4 py-4">
+      {model.punditQuote ? (
+        <p class="text-lg text-pretty text-zinc-900"><InlineCode text={model.punditQuote} /></p>
+      ) : (
+        <p class="text-zinc-500 italic">No comment. (The API call failed. Probably for the best.)</p>
+      )}
+      {links && (
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+          <a href={`#review-${model.id}`} data-copy={links.url} class="font-medium text-zinc-600 hover:text-zinc-950">Copy link</a>
+          <a href={links.x} target="_blank" rel="noopener" class="font-medium text-zinc-600 hover:text-zinc-950">Post on X</a>
+          <a href={links.bluesky} target="_blank" rel="noopener" class="font-medium text-zinc-600 hover:text-zinc-950">Post on Bluesky</a>
+        </div>
+      )}
+    </div>
+  </div>
+</article>

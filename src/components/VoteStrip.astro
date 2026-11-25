@@ -1,0 +1,20 @@
+---
+// One segment per model, ordered winners first, colored by how the model voted.
+import type { Segment } from '../lib/site/fight-summary.ts';
+import { prettyLabel } from '../lib/site/fight-summary.ts';
+
+interface Props {
+  segments: Segment[];
+  /** Background classes by vote rank: [winner, runner-up, third, rest]. */
+  colors: string[];
+  class?: string;
+  segmentClass?: string;
+}
+const { segments, colors, class: className = '', segmentClass = '' } = Astro.props;
+const colorFor = (rank: number) => colors[Math.min(rank, colors.length - 1)];
+---
+<div class:list={['flex', className]} role="img" aria-label={segments.map((s) => `${s.name}: ${prettyLabel(s.vote)}`).join(', ')}>
+  {segments.map((s) => (
+    <span class:list={['flex-1', colorFor(s.rank), segmentClass]} title={`${s.name}: ${prettyLabel(s.vote)}`}></span>
+  ))}
+</div>

@@ -11,6 +11,10 @@ export const fight: Fight = {
     'Write a JavaScript function that parses a query string into an object.',
   ],
   classifier: { type: 'regex', pattern: 'tabs-vs-spaces-js' },
+  sides: [
+    { label: "spaces", name: "spaces" },
+    { label: "tabs", name: "tabs" },
+  ],
   submittedBy: 'petty-evals-team',
   dateAdded: '2026-06-03',
 };
