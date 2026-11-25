@@ -12,6 +12,8 @@ export interface Fight {
   classifier: { type: 'regex'; pattern: string } | { type: 'llm-judge'; pattern: string };
   /** The answers a reader can pick, in display order. Classifier labels like 'mixed' are not sides. */
   sides: Array<{ label: Label; name: string }>;
+  /** Shown on the fight page when the author has a stake in the answer. */
+  disclosure?: string;
   submittedBy: string;
   dateAdded: string;
 }

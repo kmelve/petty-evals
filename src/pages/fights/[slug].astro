@@ -82,6 +82,9 @@ const description = (summary
           <p class="text-pretty text-zinc-600">
             I never asked the models what they prefer (they'd just tell me what I wanted to hear). Each one got these prompts{runsPerPrompt > 0 ? ` ${runsPerPrompt} times` : ''}, and a classifier counted what the code actually did:
           </p>
+          {fight.data.disclosure && (
+            <p class="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-pretty text-amber-900">{fight.data.disclosure}</p>
+          )}
           <ol class="flex list-decimal flex-col gap-2 pl-6 text-zinc-800">
             {fight.data.promptVariants.map((p: string) => <li><code class="font-mono text-sm">{p}</code></li>)}
           </ol>

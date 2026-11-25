@@ -15,7 +15,8 @@
 //   --concurrency=N      parallel calls (default 4)
 //   --timeout-ms=N       per-call timeout (default 90000)
 //   --retries=N          retry attempts (default 2)
-//   --smoke              alias for --runs=1 --variants=1 --temps=1
+//   --smoke              alias for --runs=1 --variants=1 --temps=1 --no-write
+//   --no-write           run and print, but don't write the result file (calibration)
 
 // Suppress AI SDK warnings about unsupported settings: several reasoning
 // models on OpenRouter ignore temperature. The warning is correct but noisy;
@@ -36,6 +37,7 @@ interface CliArgs {
   fight: string | null;
   dryRun: boolean;
   smoke: boolean;
+  noWrite: boolean;
   runs: number;
   variants: number | null;
   temps: number | null;
@@ -49,6 +51,7 @@ function parseArgs(argv: string[]): CliArgs {
     fight: null,
     dryRun: false,
     smoke: false,
+    noWrite: false,
     runs: 10,
     variants: null,
     temps: null,
@@ -59,6 +62,7 @@ function parseArgs(argv: string[]): CliArgs {
   for (const a of argv) {
     if (a === '--dry-run') args.dryRun = true;
     else if (a === '--smoke') args.smoke = true;
+    else if (a === '--no-write') args.noWrite = true;
     else if (a.startsWith('--fight=')) args.fight = a.slice('--fight='.length);
     else if (a.startsWith('--runs=')) args.runs = Number.parseInt(a.slice('--runs='.length), 10);
     else if (a.startsWith('--variants=')) args.variants = Number.parseInt(a.slice('--variants='.length), 10);
@@ -68,6 +72,7 @@ function parseArgs(argv: string[]): CliArgs {
     else if (a.startsWith('--retries=')) args.retries = Number.parseInt(a.slice('--retries='.length), 10);
   }
   if (args.smoke) {
+    args.noWrite = true;
     args.runs = 1;
     args.variants = 1;
     args.temps = 1;
@@ -242,9 +247,9 @@ async function runOne(
     else console.warn(`Pundit skipped for ${modelId}: ${outcome.skipped}`);
   });
 
-  if (args.smoke) {
-    // A smoke run is one sample per model; never let it replace a real result file.
-    console.log('\n--smoke: result not written.');
+  if (args.noWrite) {
+    // Smoke and calibration runs are too small to stand in for a real result file.
+    console.log('\n--no-write: result not written.');
   } else {
     const outDir = path.resolve(process.cwd(), 'src/data/results');
     await mkdir(outDir, { recursive: true });
