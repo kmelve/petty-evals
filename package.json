@@ -9,13 +9,13 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
-    "evals": "node --experimental-strip-types scripts/run-evals.ts",
-    "test:stats": "node --experimental-strip-types --test src/lib/eval/stats.test.ts"
+    "evals": "node --env-file-if-exists=.env --experimental-strip-types scripts/run-evals.ts",
+    "evals:pundits": "node --env-file-if-exists=.env --experimental-strip-types scripts/rerun-pundits.ts",
+    "evals:reclassify": "node --env-file-if-exists=.env --experimental-strip-types scripts/reclassify.ts",
+    "models:popular": "node --env-file-if-exists=.env --experimental-strip-types scripts/popular-models.ts",
+    "test": "node --experimental-strip-types --test 'src/**/*.test.ts'"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "3.0.81",
-    "@ai-sdk/google": "3.0.80",
-    "@ai-sdk/openai": "3.0.67",
     "@astrojs/check": "0.9.9",
     "@openrouter/ai-sdk-provider": "2.9.0",
     "@tailwindcss/vite": "4.3.0",

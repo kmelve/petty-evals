@@ -6,7 +6,7 @@ import { pathToFileURL } from 'node:url';
 import path from 'node:path';
 import { readFile, writeFile } from 'node:fs/promises';
 import { classifyOutput } from '../src/lib/eval/classifiers/index.ts';
-import { wilsonInterval, shannonEntropy } from '../src/lib/eval/stats.ts';
+import { summarizeRuns, computeVerdict } from '../src/lib/eval/report.ts';
 import type { Fight, FightResult, RunRecord, ModelResult } from '../src/lib/eval/types.ts';
 
 async function loadFight(slug: string): Promise<Fight> {
@@ -26,38 +26,18 @@ async function reclassifyFile(jsonPath: string): Promise<void> {
       const newLabel = r.output ? await classifyOutput(fight, r.output) : 'unknown';
       newRuns.push({ ...r, classification: newLabel });
     }
-    const dist: Record<string, number> = {};
-    for (const r of newRuns) dist[r.classification] = (dist[r.classification] ?? 0) + 1;
-    const modalEntry = Object.entries(dist).sort((a, b) => b[1] - a[1])[0];
-    const vote = modalEntry?.[0] ?? 'unknown';
-    const successes = dist[vote] ?? 0;
-    const total = newRuns.length;
-    const confidence = total > 0 ? successes / total : 0;
-    const ci = total > 0 ? wilsonInterval(successes, total) : [0, 0] as [number, number];
-    newModels.push({
-      ...m,
-      vote,
-      voteDistribution: dist,
-      confidence,
-      confidenceCI95: ci,
-      runs: newRuns,
-    });
+    newModels.push({ ...m, ...summarizeRuns(newRuns), runs: newRuns });
   }
 
-  const tally: Record<string, number> = {};
-  for (const m of newModels) tally[m.vote] = (tally[m.vote] ?? 0) + 1;
-  const winnerEntry = Object.entries(tally).sort((a, b) => b[1] - a[1])[0];
-  const winner = winnerEntry?.[0] ?? 'unknown';
-  const counts = Object.values(tally);
-  const disagreementIndex = shannonEntropy(counts);
+  const verdict = computeVerdict(newModels);
 
   const result: FightResult = {
     ...raw,
     models: newModels,
-    verdict: { winner, tally, disagreementIndex },
+    verdict,
   };
-  await writeFile(jsonPath, JSON.stringify(result, null, 2));
-  console.log(`Reclassified ${raw.slug}: verdict=${winner} tally=${JSON.stringify(tally)} disagreement=${disagreementIndex.toFixed(3)}`);
+  await writeFile(jsonPath, JSON.stringify(result, null, 2) + '\n');
+  console.log(`Reclassified ${raw.slug}: verdict=${verdict.winner} tally=${JSON.stringify(verdict.tally)} disagreement=${verdict.disagreementIndex.toFixed(3)}`);
 }
 
 const slugs = process.argv.slice(2);
