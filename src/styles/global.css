@@ -21,6 +21,13 @@
   html {
     @apply bg-white font-sans text-zinc-900;
   }
+  /* No orphans: balanced headings, pretty paragraphs. Per-element classes can still override. */
+  h1, h2, h3, h4 {
+    text-wrap: balance;
+  }
+  p, li, blockquote, figcaption, dd {
+    text-wrap: pretty;
+  }
 }
 
 /* Prose for long-form pages (methodology). */
