@@ -8,6 +8,7 @@ import { Resvg } from '@resvg/resvg-js';
 import type { FightSummary } from './fight-summary.ts';
 import { prettyLabel } from './fight-summary.ts';
 import { initials, prStatus, reviewState } from './review.ts';
+import { noOrphan, type SideVerdict } from './sides.ts';
 
 export const OG_WIDTH = 1200;
 export const OG_HEIGHT = 630;
@@ -69,6 +70,66 @@ function avatar(name: string, rank: number, size = 56): Node {
   );
 }
 
+const SIDE_THEME: Record<SideVerdict['tone'], { bg: string; fg: string; muted: string; accent: string; ring: string }> = {
+  agree: { bg: '#ffffff', fg: C.ink, muted: '#71717a', accent: '#047857', ring: '#ffffff' },
+  against: { bg: '#0b0b0d', fg: '#fafafa', muted: '#a1a1aa', accent: '#fb7185', ring: '#0b0b0d' },
+  split: { bg: '#fffbeb', fg: C.ink, muted: '#78716c', accent: '#b45309', ring: '#fffbeb' },
+};
+
+/** Big pick size by length, so "==" and "function declarations" both fill the card without wrapping. */
+function headlineSize(text: string): number {
+  if (text.length <= 6) return 184;
+  if (text.length <= 10) return 150;
+  if (text.length <= 16) return 112;
+  if (text.length <= 22) return 86;
+  return 72;
+}
+
+/** Share card for a reader who picked a side: "8 AI models agree with me: semicolons." */
+export function sideCard(opts: { title: string; verdict: SideVerdict }): Node {
+  const { title, verdict: v } = opts;
+  const t = SIDE_THEME[v.tone];
+  const size = headlineSize(v.headline);
+  const ordered = [
+    ...v.withMe.map((m) => ({ m, color: C.rank[0], gap: false })),
+    ...v.against.map((m, i) => ({ m, color: C.rank[2], gap: i === 0 && v.withMe.length > 0 })),
+    ...v.abstained.map((m) => ({ m, color: '#71717a', gap: false })),
+  ];
+  const tilt = v.tone === 'agree' ? -6 : 5;
+  return h(
+    'div',
+    { width: '100%', height: '100%', boxSizing: 'border-box', flexDirection: 'column', justifyContent: 'space-between', background: t.bg, color: t.fg, padding: '52px 72px 56px', fontFamily: 'Mona Sans' },
+    h(
+      'div',
+      { justifyContent: 'space-between', alignItems: 'center' },
+      h('div', { fontSize: 28, fontWeight: 600, color: t.fg, maxWidth: 680 }, noOrphan(clip(title.replace(/`/g, ''), 60) + '?')),
+      h('div', { transform: `rotate(${tilt}deg)`, border: `5px solid ${t.accent}`, color: t.accent, borderRadius: 12, padding: '8px 20px', fontFamily: 'Geist Mono', fontSize: 30, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 2 }, v.stamp),
+    ),
+    h(
+      'div',
+      { flexDirection: 'column', gap: 10 },
+      h('div', { fontSize: 44, fontWeight: 600, color: t.muted, letterSpacing: -0.5 }, noOrphan(v.kicker)),
+      v.isCode
+        ? h('div', { fontFamily: 'Geist Mono', fontSize: Math.round(size * 0.9), fontWeight: 500, letterSpacing: -size * 0.02, lineHeight: 1 }, v.headline)
+        : h('div', { fontSize: size, fontWeight: 700, letterSpacing: -size * 0.035, lineHeight: 1 }, v.headline),
+    ),
+    h(
+      'div',
+      { alignItems: 'center', justifyContent: 'space-between', gap: 32 },
+      h('div', { paddingLeft: 12, flexShrink: 0 }, ...ordered.map(({ m, color, gap }) =>
+        h('div', {
+          width: 60, height: 60, borderRadius: 999, background: color, color: 'white', alignItems: 'center', justifyContent: 'center',
+          fontFamily: 'Geist Mono', fontSize: 21, fontWeight: 500, border: `5px solid ${t.ring}`, marginLeft: gap ? 14 : -12,
+        }, initials(m.name)),
+      )),
+      h('div', { flexDirection: 'column', alignItems: 'flex-end', gap: 6, maxWidth: 560 },
+        h('div', { fontSize: 28, fontWeight: 600, color: t.accent, textAlign: 'right', textWrap: 'balance' }, noOrphan(v.footer)),
+        h('div', { fontFamily: 'Geist Mono', fontSize: 20, color: t.muted }, 'petty-evals.dev'),
+      ),
+    ),
+  );
+}
+
 export function fightCard(opts: { title: string; summary: FightSummary; votes: Record<string, string> }): Node {
   const { title, summary } = opts;
   const quote = summary.featuredQuote;
@@ -115,7 +176,7 @@ export function homeCard(opts: { fights: number; contested: number; names: strin
     ),
     h('div', { alignItems: 'center', justifyContent: 'space-between' },
       h('div', { paddingLeft: 10 }, ...opts.names.map((n, i) => avatar(n, i % 2 === 0 ? 0 : 1, 72))),
-      h('div', { fontFamily: 'Geist Mono', fontSize: 28, color: C.muted }, 'pettyevals.dev'),
+      h('div', { fontFamily: 'Geist Mono', fontSize: 28, color: C.muted }, 'petty-evals.dev'),
     ),
   );
 }

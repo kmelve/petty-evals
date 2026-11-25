@@ -27,6 +27,7 @@ const fights = defineCollection({
       type: z.enum(['regex', 'llm-judge']),
       pattern: z.string(),
     }),
+    sides: z.array(z.object({ label: z.string(), name: z.string() })).min(2),
     submittedBy: z.string(),
     dateAdded: z.string(),
   }),

@@ -11,6 +11,10 @@ export const fight: Fight = {
     'Write a PHP function that uses `usort` to sort an array of products by price ascending.',
   ],
   classifier: { type: 'regex', pattern: 'arrow-fn-vs-closure-php' },
+  sides: [
+    { label: "arrow", name: "fn() =>" },
+    { label: "closure", name: "function () use" },
+  ],
   submittedBy: 'petty-evals-team',
   dateAdded: '2026-06-04',
 };

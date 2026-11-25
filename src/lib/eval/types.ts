@@ -10,6 +10,8 @@ export interface Fight {
   category: string;
   promptVariants: string[];
   classifier: { type: 'regex'; pattern: string } | { type: 'llm-judge'; pattern: string };
+  /** The answers a reader can pick, in display order. Classifier labels like 'mixed' are not sides. */
+  sides: Array<{ label: Label; name: string }>;
   submittedBy: string;
   dateAdded: string;
 }

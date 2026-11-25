@@ -10,6 +10,7 @@ const fight: Fight = {
   category: 'formatting',
   promptVariants: ['Write a debounce function.'],
   classifier: { type: 'regex', pattern: 'semicolons-js' },
+  sides: [{ label: 'semicolons', name: 'semicolons' }, { label: 'no-semicolons', name: 'no semicolons' }],
   submittedBy: 'test',
   dateAdded: '2026-11-25',
 };

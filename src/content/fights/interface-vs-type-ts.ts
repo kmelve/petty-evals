@@ -11,6 +11,10 @@ export const fight: Fight = {
     'Write a TypeScript function that takes a `RequestOptions` object (method, url, headers, body) and returns a fetch Promise. Declare RequestOptions.',
   ],
   classifier: { type: 'regex', pattern: 'interface-vs-type-ts' },
+  sides: [
+    { label: "interface", name: "interface" },
+    { label: "type", name: "type" },
+  ],
   submittedBy: 'petty-evals-team',
   dateAdded: '2026-06-03',
 };

@@ -11,6 +11,10 @@ export const fight: Fight = {
     'Write a JavaScript file that exports `formatDate(date)` and `parseDate(str)` for ISO-8601 dates.',
   ],
   classifier: { type: 'regex', pattern: 'arrow-vs-function' },
+  sides: [
+    { label: "arrow", name: "arrow functions" },
+    { label: "function", name: "function declarations" },
+  ],
   submittedBy: 'petty-evals-team',
   dateAdded: '2026-06-03',
 };

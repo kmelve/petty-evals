@@ -11,6 +11,10 @@ export const fight: Fight = {
     "Write a README.md for a React component library called 'paw' with 12 small UI primitives.",
   ],
   classifier: { type: 'regex', pattern: 'readme-emoji' },
+  sides: [
+    { label: "no-emoji", name: "no emoji" },
+    { label: "with-emoji", name: "emoji in headings" },
+  ],
   submittedBy: 'petty-evals-team',
   dateAdded: '2026-06-03',
 };

@@ -54,6 +54,22 @@ const description = (summary
     </div>
   </div>
 
+  {result && (
+    <section class="mb-10 flex flex-col gap-3 rounded-lg bg-zinc-950 p-5 text-white sm:flex-row sm:items-center sm:justify-between md:p-6" aria-labelledby="pick-heading">
+      <div class="flex flex-col gap-1">
+        <h2 id="pick-heading" class="text-lg font-semibold tracking-tight">Which side are you on?</h2>
+        <p class="text-sm text-zinc-400">Pick before you scroll. You get a card to share either way.</p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        {fight.data.sides.map((s: { label: string; name: string }) => (
+          <a href={`/fights/${slug}/${s.label}`} class="rounded-md bg-white px-4 py-2.5 text-sm font-medium text-zinc-950 hover:bg-zinc-200">
+            <span class:list={[/[^A-Za-z0-9 '-]/.test(s.name) && 'font-mono']}>{s.name}</span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
   <div class="grid gap-10 lg:grid-cols-[minmax(0,1fr)_16rem]">
     <div class="flex min-w-0 flex-col gap-8">
       <!-- Description -->

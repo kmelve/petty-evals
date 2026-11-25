@@ -11,6 +11,10 @@ export const fight: Fight = {
     'Write a JavaScript function `dedupe(arr)` that returns a new array with duplicates removed.',
   ],
   classifier: { type: 'regex', pattern: 'triple-equals-js' },
+  sides: [
+    { label: "triple-equals", name: "===" },
+    { label: "double-equals", name: "==" },
+  ],
   submittedBy: 'petty-evals-team',
   dateAdded: '2026-06-03',
 };

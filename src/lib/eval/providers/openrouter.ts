@@ -25,7 +25,7 @@ function openrouter() {
     apiKey,
     compatibility: 'strict',
     appName: 'Petty Evals',
-    appUrl: 'https://pettyevals.dev',
+    appUrl: 'https://petty-evals.dev',
   });
   return client;
 }

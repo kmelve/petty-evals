@@ -11,6 +11,7 @@ const fight: Fight = {
   category: 'formatting',
   promptVariants: ['p'],
   classifier: { type: 'regex', pattern: 'quotes-js' },
+  sides: [{ label: 'single', name: 'single quotes' }, { label: 'double', name: 'double quotes' }],
   submittedBy: 'test',
   dateAdded: '2026-11-25',
 };

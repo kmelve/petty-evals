@@ -11,6 +11,10 @@ export const fight: Fight = {
     'Write a JavaScript function that fetches a URL with the built-in fetch and returns the parsed JSON.',
   ],
   classifier: { type: 'regex', pattern: 'semicolons-js' },
+  sides: [
+    { label: "semicolons", name: "semicolons" },
+    { label: "no-semicolons", name: "no semicolons" },
+  ],
   submittedBy: 'petty-evals-team',
   dateAdded: '2026-06-03',
 };

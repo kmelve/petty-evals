@@ -11,6 +11,10 @@ export const fight: Fight = {
     'Write a JavaScript function that builds a URL with a base path and a query parameters object.',
   ],
   classifier: { type: 'regex', pattern: 'let-vs-const-default' },
+  sides: [
+    { label: "const", name: "const" },
+    { label: "let", name: "let" },
+  ],
   submittedBy: 'petty-evals-team',
   dateAdded: '2026-06-03',
 };

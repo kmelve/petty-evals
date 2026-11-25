@@ -12,7 +12,7 @@ const {
   ogImage = '/og/home.png',
 } = Astro.props;
 
-const site = Astro.site ?? new URL('https://pettyevals.dev');
+const site = Astro.site ?? new URL('https://petty-evals.dev');
 const ogUrl = new URL(ogImage, site).href;
 const canonical = new URL(Astro.url.pathname, site).href;
 const path = Astro.url.pathname;
@@ -87,5 +87,12 @@ const tabs = [
         <p>Made by <a href="https://github.com/kmelve" class="font-medium text-zinc-900 hover:text-sky-700">@kmelve</a>. Models called via OpenRouter.</p>
       </div>
     </footer>
+    {import.meta.env.PROD && (
+      <>
+        <!-- Vercel Web Analytics: page views plus the "share" events the side pages send. Needs Web Analytics enabled on the project. -->
+        <script is:inline>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+        <script is:inline defer src="/_vercel/insights/script.js"></script>
+      </>
+    )}
   </body>
 </html>

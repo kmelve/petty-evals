@@ -1,6 +1,6 @@
 // Share intents for pundit quotes. Plain links, no third-party scripts.
 
-export const SITE_URL = 'https://pettyevals.dev';
+export const SITE_URL = 'https://petty-evals.dev';
 
 export interface ShareLinks {
   url: string;

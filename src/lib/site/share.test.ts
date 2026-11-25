@@ -14,7 +14,7 @@ test('shareText: long quotes are trimmed to fit the limit', () => {
 
 test('quoteShareLinks: permalink targets the review anchor', () => {
   const links = quoteShareLinks({ slug: 'quotes-js', modelId: 'glm-5.3', modelName: 'GLM', fightTitle: 'Quotes', quote: 'q' });
-  assert.equal(links.url, 'https://pettyevals.dev/fights/quotes-js#review-glm-5.3');
+  assert.equal(links.url, 'https://petty-evals.dev/fights/quotes-js#review-glm-5.3');
 });
 
 test('quoteShareLinks: intents carry the encoded text', () => {

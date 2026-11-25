@@ -19,7 +19,7 @@
 **Status**: Complete
 
 ## Stage 4: Shareability
-**Goal**: Things people screenshot and post: OG cards with the split and the best dunk, per-quote share links, a cross-fight "beef" view (who disagrees with whom).
+**Goal**: Things people screenshot and post: OG cards with the split and the best dunk, per-quote share links, a cross-fight "beef" view (who disagrees with whom), and a "pick your side" page + card per fight side ("8 AI models agree with me: semicolons." / "Merging anyway.").
 **Success Criteria**: Each fight's OG image shows verdict, split bar and a quote; quotes have permalinks + share intents.
 **Tests**: build generates OG PNGs for every fight; beef matrix computation unit-tested.
 **Status**: In Progress

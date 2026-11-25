@@ -11,6 +11,10 @@ export const fight: Fight = {
     'Write a JavaScript function that takes a list of URLs and returns their response statuses in order.',
   ],
   classifier: { type: 'regex', pattern: 'async-await-vs-then' },
+  sides: [
+    { label: "async-await", name: "async/await" },
+    { label: "then-chain", name: ".then() chains" },
+  ],
   submittedBy: 'petty-evals-team',
   dateAdded: '2026-06-03',
 };

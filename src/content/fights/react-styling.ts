@@ -11,6 +11,12 @@ export const fight: Fight = {
     'Write a React modal component with a darkened backdrop and a centered content panel.',
   ],
   classifier: { type: 'regex', pattern: 'react-styling' },
+  sides: [
+    { label: "tailwind", name: "Tailwind" },
+    { label: "css-in-js", name: "CSS-in-JS" },
+    { label: "css-file", name: "CSS files" },
+    { label: "inline-style", name: "inline styles" },
+  ],
   submittedBy: 'petty-evals-team',
   dateAdded: '2026-06-03',
 };

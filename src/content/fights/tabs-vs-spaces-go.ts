@@ -11,6 +11,10 @@ export const fight: Fight = {
     'Write a Go function `WorkerPool(jobs <-chan int, n int)` that spawns n goroutines to process jobs concurrently.',
   ],
   classifier: { type: 'regex', pattern: 'tabs-vs-spaces-go' },
+  sides: [
+    { label: "spaces", name: "spaces" },
+    { label: "tabs", name: "tabs" },
+  ],
   submittedBy: 'petty-evals-team',
   dateAdded: '2026-06-03',
 };

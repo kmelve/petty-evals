@@ -11,6 +11,10 @@ export const fight: Fight = {
     'Write a JavaScript function that returns an object mapping HTTP status codes (200, 301, 404, 500) to short human-readable labels.',
   ],
   classifier: { type: 'regex', pattern: 'trailing-commas-js' },
+  sides: [
+    { label: "trailing", name: "trailing commas" },
+    { label: "no-trailing", name: "no trailing commas" },
+  ],
   submittedBy: 'petty-evals-team',
   dateAdded: '2026-06-03',
 };

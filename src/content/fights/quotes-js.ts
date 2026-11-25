@@ -11,6 +11,10 @@ export const fight: Fight = {
     'Write a JavaScript function that builds an HTTP Authorization header value for Bearer token auth.',
   ],
   classifier: { type: 'regex', pattern: 'quotes-js' },
+  sides: [
+    { label: "single", name: "single quotes" },
+    { label: "double", name: "double quotes" },
+  ],
   submittedBy: 'petty-evals-team',
   dateAdded: '2026-06-03',
 };

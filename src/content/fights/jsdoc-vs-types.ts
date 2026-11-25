@@ -11,6 +11,10 @@ export const fight: Fight = {
     'Write a function `fetchWithRetry(url, options, retries)` that retries on failure with exponential backoff. Document it well.',
   ],
   classifier: { type: 'regex', pattern: 'jsdoc-vs-types' },
+  sides: [
+    { label: "typescript", name: "TypeScript types" },
+    { label: "jsdoc", name: "JSDoc" },
+  ],
   submittedBy: 'petty-evals-team',
   dateAdded: '2026-06-03',
 };

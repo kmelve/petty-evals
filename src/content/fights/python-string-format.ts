@@ -11,6 +11,11 @@ export const fight: Fight = {
     'Write a Python function that takes a request count and a duration in seconds and returns a single-line performance summary.',
   ],
   classifier: { type: 'regex', pattern: 'python-string-format' },
+  sides: [
+    { label: "fstring", name: "f-strings" },
+    { label: "format-method", name: ".format()" },
+    { label: "percent", name: "% formatting" },
+  ],
   submittedBy: 'petty-evals-team',
   dateAdded: '2026-06-03',
 };

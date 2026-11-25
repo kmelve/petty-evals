@@ -11,6 +11,10 @@ export const fight: Fight = {
     'Write a JavaScript function `httpStatusBucket(code)` that returns "info", "success", "redirect", "client-error", or "server-error" based on the status code. Reject codes outside 100..599.',
   ],
   classifier: { type: 'regex', pattern: 'early-return-vs-nested' },
+  sides: [
+    { label: "early-return", name: "early returns" },
+    { label: "nested-if", name: "nested if/else" },
+  ],
   submittedBy: 'petty-evals-team',
   dateAdded: '2026-06-03',
 };
